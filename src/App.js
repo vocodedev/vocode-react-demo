@@ -26,6 +26,8 @@ const CallStatus = {
   ERROR: Symbol("error"),
 };
 
+const OUTPUT_FORMAT = "WAV";
+
 function blobToBase64(blob) {
   return new Promise((resolve, _) => {
     const reader = new FileReader();
@@ -127,23 +129,29 @@ function App() {
     };
   }, [socket]);
 
+  const playArrayBuffer = (arrayBuffer) => {
+    audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+      const source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioContext.destination);
+      source.start(0);
+      source.onended = () => {
+        setProcessing(false);
+      };
+    });
+  };
+
   React.useEffect(() => {
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
-      fetch(URL.createObjectURL(new Blob([audio])))
-        .then((response) => response.arrayBuffer())
-        .then((arrayBuffer) => {
-          audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-            const source = audioContext.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioContext.destination);
-            source.start(0);
-            source.onended = () => {
-              setProcessing(false);
-            };
-          });
-        });
+      if (OUTPUT_FORMAT === "WAV") {
+        playArrayBuffer(audio);
+      } else {
+        fetch(URL.createObjectURL(new Blob([audio])))
+          .then((response) => response.arrayBuffer())
+          .then(playArrayBuffer);
+      }
     }
   }, [audioQueue, processing]);
 
@@ -191,6 +199,7 @@ function App() {
 
   const startConversation = async () => {
     setCallStatus(CallStatus.CONNECTING);
+    audioContext.resume();
 
     setWaveSurfer((prev) => {
       if (prev === null) {
@@ -202,7 +211,7 @@ function App() {
       }
     });
 
-    const newSocket = new WebSocket("wss://bb5cda1f2f89.ngrok.io/websocket");
+    const newSocket = new WebSocket("wss://17a02dfcc41b.ngrok.io/websocket");
     newSocket.binaryType = "arraybuffer";
     setSocket(newSocket);
 
@@ -231,7 +240,7 @@ function App() {
                   <PhoneIcon boxSize={100} />
                 </motion.div>
               </Button>
-              <div class="wavesurfer" ref={waveformRef}></div>
+              <div className="wavesurfer" ref={waveformRef}></div>
               {callStatus == CallStatus.CONNECTING && <Spinner />}
             </VStack>
           </Box>
