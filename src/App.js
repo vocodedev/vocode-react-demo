@@ -3,7 +3,16 @@ import "./App.css";
 
 import React from "react";
 import { motion, useAnimation } from "framer-motion";
-import { Box, Button, ChakraProvider, Spinner, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Center,
+  ChakraProvider,
+  Flex,
+  Spacer,
+  Spinner,
+  VStack,
+} from "@chakra-ui/react";
 import DarkModeProvider from "./DarkModeProvider";
 import { PhoneIcon } from "@chakra-ui/icons";
 import { MediaRecorder, register } from "extendable-media-recorder";
@@ -122,15 +131,19 @@ function App() {
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
-      audioContext.decodeAudioData(audio, (buffer) => {
-        const source = audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContext.destination);
-        source.start(0);
-        source.onended = () => {
-          setProcessing(false);
-        };
-      });
+      fetch(URL.createObjectURL(new Blob([audio])))
+        .then((response) => response.arrayBuffer())
+        .then((arrayBuffer) => {
+          audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+            source.onended = () => {
+              setProcessing(false);
+            };
+          });
+        });
     }
   }, [audioQueue, processing]);
 
@@ -189,9 +202,7 @@ function App() {
       }
     });
 
-    const newSocket = new WebSocket(
-      "wss://e3f1-136-24-82-111.ngrok.io/websocket"
-    );
+    const newSocket = new WebSocket("wss://bb5cda1f2f89.ngrok.io/websocket");
     newSocket.binaryType = "arraybuffer";
     setSocket(newSocket);
 
@@ -201,27 +212,30 @@ function App() {
   return (
     <ChakraProvider>
       <DarkModeProvider>
-        <Box height={"100vh"} className="App">
-          <VStack>
-            <Button
-              variant="link"
-              disabled={[CallStatus.CONNECTING, CallStatus.ERROR].includes(
-                callStatus
-              )}
-              onClick={
-                callStatus === CallStatus.CONNECTED
-                  ? stopRecording
-                  : startConversation
-              }
-            >
-              <motion.div animate={pulse}>
-                <PhoneIcon boxSize={100} />
-              </motion.div>
-            </Button>
-            {callStatus === CallStatus.CONNECTING && <Spinner />}
-            <div display="none" ref={waveformRef}></div>
-          </VStack>
-        </Box>
+        <Flex height={"100vh"} align={"center"} direction="column">
+          <Spacer />
+          <Box height={"70vh"}>
+            <VStack>
+              <Button
+                variant="link"
+                disabled={[CallStatus.CONNECTING, CallStatus.ERROR].includes(
+                  callStatus
+                )}
+                onClick={
+                  callStatus === CallStatus.CONNECTED
+                    ? stopRecording
+                    : startConversation
+                }
+              >
+                <motion.div animate={pulse}>
+                  <PhoneIcon boxSize={100} />
+                </motion.div>
+              </Button>
+              <div class="wavesurfer" ref={waveformRef}></div>
+              {callStatus == CallStatus.CONNECTING && <Spinner />}
+            </VStack>
+          </Box>
+        </Flex>
       </DarkModeProvider>
     </ChakraProvider>
   );
