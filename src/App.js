@@ -26,7 +26,7 @@ const CallStatus = {
   ERROR: Symbol("error"),
 };
 
-const OUTPUT_FORMAT = "WAV";
+const OUTPUT_FORMAT = "MP3";
 
 function blobToBase64(blob) {
   return new Promise((resolve, _) => {
