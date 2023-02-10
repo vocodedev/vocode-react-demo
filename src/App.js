@@ -6,7 +6,6 @@ import { motion, useAnimation } from "framer-motion";
 import {
   Box,
   Button,
-  Center,
   ChakraProvider,
   Flex,
   Spacer,
@@ -18,15 +17,16 @@ import { PhoneIcon } from "@chakra-ui/icons";
 import { MediaRecorder, register } from "extendable-media-recorder";
 import { connect } from "extendable-media-recorder-wav-encoder";
 import WaveSurfer from "wavesurfer.js";
+import { Buffer } from "buffer";
 
 const CallStatus = {
-  IDLE: Symbol("red"),
-  CONNECTING: Symbol("green"),
-  CONNECTED: Symbol("blue"),
+  IDLE: Symbol("idle"),
+  CONNECTING: Symbol("connecting"),
+  CONNECTED: Symbol("connected"),
   ERROR: Symbol("error"),
 };
 
-const OUTPUT_FORMAT = "MP3";
+const PHONE_CALL_ROTATION_DEGREES = 137;
 
 function blobToBase64(blob) {
   return new Promise((resolve, _) => {
@@ -51,7 +51,7 @@ function App() {
 
   React.useEffect(() => {
     pulse.start({
-      rotate: 137,
+      rotate: PHONE_CALL_ROTATION_DEGREES,
       transition: { duration: 0 },
     });
   }, []);
@@ -68,7 +68,7 @@ function App() {
       [CallStatus.ERROR, CallStatus.IDLE].includes(callStatus)
     ) {
       pulse.start({
-        rotate: 137,
+        rotate: PHONE_CALL_ROTATION_DEGREES,
         transition: { duration: 1 },
       });
     }
@@ -80,7 +80,6 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    console.log("called");
     const registerWav = async () => {
       await register(await connect());
     };
@@ -89,45 +88,76 @@ function App() {
 
   React.useEffect(() => {
     if (!recorder) return;
-    recorder.addEventListener("dataavailable", ({ data }) => {
-      if (socket.readyState !== WebSocket.OPEN) {
-        if (waveSurfer) waveSurfer.loadBlob(data);
-        return;
-      }
-      blobToBase64(data).then((base64Encoded) => {
-        socket.send(
-          JSON.stringify({
-            type: "audio",
-            data: base64Encoded,
-          })
-        );
+    if (callStatus === CallStatus.CONNECTING) {
+      recorder.addEventListener("dataavailable", ({ data }) => {
+        if (waveSurfer && !audioMetadata) {
+          waveSurfer.loadBlob(data);
+        }
       });
-    });
-
-    recorder.start(10);
-  }, [recorder]);
+      recorder.start(10);
+    } else if (callStatus === CallStatus.CONNECTED) {
+      recorder.addEventListener("dataavailable", ({ data }) => {
+        if (waveSurfer && !audioMetadata) {
+          waveSurfer.loadBlob(data);
+        }
+        blobToBase64(data).then((base64Encoded) => {
+          socket.send(
+            JSON.stringify({
+              type: "audio",
+              data: base64Encoded,
+            })
+          );
+        });
+      });
+    }
+  }, [recorder, callStatus]);
 
   React.useEffect(() => {
     if (!waveSurfer) return;
     waveSurfer.on("ready", function () {
       let samplingRate = waveSurfer.backend.ac.sampleRate;
       let encoding = waveSurfer.params.backend;
+      console.log({ samplingRate, encoding });
       setAudioMetadata({ samplingRate, encoding });
     });
   }, [waveSurfer]);
 
   React.useEffect(() => {
     if (!socket) return;
-    socket.onopen = () => {
-      setCallStatus(CallStatus.CONNECTED);
-    };
     socket.onerror = (error) => {
       setCallStatus(CallStatus.ERROR);
     };
     socket.onmessage = (event) => {
-      queueAudio(event.data);
+      const message = JSON.parse(event.data);
+      if (message.type === "audio") {
+        queueAudio(Buffer.from(message.data, "base64"));
+      } else if (message.type === "ready") {
+        setCallStatus(CallStatus.CONNECTED);
+      }
     };
   }, [socket]);
+
+  React.useEffect(() => {
+    const awaitSocketAndSendAudioMetadata = async () => {
+      await new Promise((resolve) => {
+        const interval = setInterval(() => {
+          if (socket.readyState === WebSocket.OPEN) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
+      socket.send(
+        JSON.stringify({
+          type: "start",
+          data: audioMetadata,
+        })
+      );
+    };
+    if (audioMetadata && callStatus === CallStatus.CONNECTING) {
+      awaitSocketAndSendAudioMetadata().catch(console.error);
+    }
+  }, [audioMetadata, callStatus]);
 
   const playArrayBuffer = (arrayBuffer) => {
     audioContext.decodeAudioData(arrayBuffer, (buffer) => {
@@ -145,13 +175,9 @@ function App() {
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
-      if (OUTPUT_FORMAT === "WAV") {
-        playArrayBuffer(audio);
-      } else {
-        fetch(URL.createObjectURL(new Blob([audio])))
-          .then((response) => response.arrayBuffer())
-          .then(playArrayBuffer);
-      }
+      fetch(URL.createObjectURL(new Blob([audio])))
+        .then((response) => response.arrayBuffer())
+        .then(playArrayBuffer);
     }
   }, [audioQueue, processing]);
 
@@ -201,18 +227,13 @@ function App() {
     setCallStatus(CallStatus.CONNECTING);
     audioContext.resume();
 
-    setWaveSurfer((prev) => {
-      if (prev === null) {
-        WaveSurfer.create({
-          container: waveformRef.current,
-        });
-      } else {
-        return prev;
-      }
-    });
+    setWaveSurfer(
+      WaveSurfer.create({
+        container: waveformRef.current,
+      })
+    );
 
     const newSocket = new WebSocket("wss://17a02dfcc41b.ngrok.io/websocket");
-    newSocket.binaryType = "arraybuffer";
     setSocket(newSocket);
 
     await streamMicrophoneAudioToSocket();
