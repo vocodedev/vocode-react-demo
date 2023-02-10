@@ -22,7 +22,7 @@ const App = () => {
         <Flex height={"100vh"} align={"center"} direction="column">
           <Spacer />
           <Box height={"70vh"}>
-            {!(!isIE && !isMobile) ? (
+            {!isIE && !isMobile ? (
               <Conversation />
             ) : (
               <VStack>
