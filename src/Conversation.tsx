@@ -187,7 +187,7 @@ const Conversation = () => {
   const streamMicrophoneAudioToSocket = async () => {
     let audioStreamToUse;
 
-    if (audioStream === null) {
+    if (!audioStream) {
       try {
         audioStreamToUse = await navigator.mediaDevices.getUserMedia({
           video: false,
@@ -253,9 +253,7 @@ const Conversation = () => {
           <PhoneIcon boxSize={100} />
         </motion.div>
       </Button>
-      {waveformRef.current && (
-        <div className="wavesurfer" ref={waveformRef}></div>
-      )}
+      <div className="wavesurfer" ref={waveformRef}></div>
       {callStatus == CallStatus.CONNECTING && <Spinner />}
     </VStack>
   );

@@ -21,6 +21,7 @@
     "ffmpeg.js": "^4.2.9003",
     "framer-motion": "^9.0.1",
     "react": "^18.2.0",
+    "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "wavesurfer.js": "^6.4.0",
