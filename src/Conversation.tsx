@@ -231,7 +231,7 @@ const Conversation = () => {
         })
       );
 
-    const newSocket = new WebSocket("wss://17a02dfcc41b.ngrok.io/websocket");
+    const newSocket = new WebSocket("wss://app.demo.vocode.dev/websocket");
     setSocket(newSocket);
 
     await streamMicrophoneAudioToSocket();
