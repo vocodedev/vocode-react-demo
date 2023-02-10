@@ -11,6 +11,9 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@types/wavesurfer.js": "^6.0.3",
     "buffer": "^6.0.3",
     "debounce": "^1.2.1",
     "extendable-media-recorder": "^7.1.2",
@@ -46,5 +49,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "source-map-loader": "^4.0.1",
+    "ts-loader": "^9.4.2",
+    "typescript": "^4.9.5"
   }
 }

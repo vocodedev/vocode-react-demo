@@ -1,23 +1,25 @@
-import "@fontsource/inter";
-import "./App.css";
-
+import { Button, Spinner, VStack } from "@chakra-ui/react";
 import React from "react";
-import { motion, useAnimation } from "framer-motion";
 import {
-  Box,
-  Button,
-  ChakraProvider,
-  Flex,
-  Spacer,
-  Spinner,
-  VStack,
-} from "@chakra-ui/react";
-import DarkModeProvider from "./DarkModeProvider";
-import { PhoneIcon } from "@chakra-ui/icons";
-import { MediaRecorder, register } from "extendable-media-recorder";
+  IMediaRecorder,
+  MediaRecorder,
+  register,
+} from "extendable-media-recorder";
 import { connect } from "extendable-media-recorder-wav-encoder";
 import WaveSurfer from "wavesurfer.js";
 import { Buffer } from "buffer";
+import { PhoneIcon } from "@chakra-ui/icons";
+import { motion, useAnimation } from "framer-motion";
+
+const PHONE_CALL_ROTATION_DEGREES = 137;
+
+const blobToBase64 = (blob: Blob) => {
+  return new Promise((resolve, _) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result?.toString().split(",")[1]);
+    reader.readAsDataURL(blob);
+  });
+};
 
 const CallStatus = {
   IDLE: Symbol("idle"),
@@ -26,28 +28,22 @@ const CallStatus = {
   ERROR: Symbol("error"),
 };
 
-const PHONE_CALL_ROTATION_DEGREES = 137;
-
-function blobToBase64(blob) {
-  return new Promise((resolve, _) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(",")[1]);
-    reader.readAsDataURL(blob);
-  });
-}
-
-function App() {
-  const [audioContext, setAudioContext] = React.useState(null);
-  const [audioQueue, setAudioQueue] = React.useState([]);
+const Conversation = () => {
+  const [audioContext, setAudioContext] = React.useState<AudioContext>();
+  const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
   const [processing, setProcessing] = React.useState(false);
-  const [audioStream, setAudioStream] = React.useState(null);
-  const [recorder, setRecorder] = React.useState(null);
-  const [socket, setSocket] = React.useState(null);
-  const [waveSurfer, setWaveSurfer] = React.useState(null);
-  const [audioMetadata, setAudioMetadata] = React.useState(null);
+  const [audioStream, setAudioStream] = React.useState<MediaStream>();
+  const [recorder, setRecorder] = React.useState<IMediaRecorder>();
+  const [socket, setSocket] = React.useState<WebSocket>();
+  const [waveSurfer, setWaveSurfer] = React.useState<WaveSurfer>();
+  const [audioMetadata, setAudioMetadata] = React.useState<{
+    samplingRate: number;
+    encoding: string;
+  }>();
   const [callStatus, setCallStatus] = React.useState(CallStatus.IDLE);
   const prevCallStatus = React.useRef(callStatus);
   const pulse = useAnimation();
+  const waveformRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     pulse.start({
@@ -87,16 +83,16 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    if (!recorder) return;
+    if (!recorder || !socket) return;
     if (callStatus === CallStatus.CONNECTING) {
-      recorder.addEventListener("dataavailable", ({ data }) => {
+      recorder.addEventListener("dataavailable", ({ data }: { data: Blob }) => {
         if (waveSurfer && !audioMetadata) {
           waveSurfer.loadBlob(data);
         }
       });
       recorder.start(10);
     } else if (callStatus === CallStatus.CONNECTED) {
-      recorder.addEventListener("dataavailable", ({ data }) => {
+      recorder.addEventListener("dataavailable", ({ data }: { data: Blob }) => {
         if (waveSurfer && !audioMetadata) {
           waveSurfer.loadBlob(data);
         }
@@ -115,6 +111,7 @@ function App() {
   React.useEffect(() => {
     if (!waveSurfer) return;
     waveSurfer.on("ready", function () {
+      // @ts-ignore
       let samplingRate = waveSurfer.backend.ac.sampleRate;
       let encoding = waveSurfer.params.backend;
       console.log({ samplingRate, encoding });
@@ -138,12 +135,12 @@ function App() {
   }, [socket]);
 
   React.useEffect(() => {
-    const awaitSocketAndSendAudioMetadata = async () => {
+    const awaitSocketAndSendAudioMetadata = async (socket: WebSocket) => {
       await new Promise((resolve) => {
         const interval = setInterval(() => {
           if (socket.readyState === WebSocket.OPEN) {
             clearInterval(interval);
-            resolve();
+            resolve(null);
           }
         }, 100);
       });
@@ -154,38 +151,38 @@ function App() {
         })
       );
     };
-    if (audioMetadata && callStatus === CallStatus.CONNECTING) {
-      awaitSocketAndSendAudioMetadata().catch(console.error);
+    if (audioMetadata && socket && callStatus === CallStatus.CONNECTING) {
+      awaitSocketAndSendAudioMetadata(socket).catch(console.error);
     }
   }, [audioMetadata, callStatus]);
 
-  const playArrayBuffer = (arrayBuffer) => {
-    audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-      const source = audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioContext.destination);
-      source.start(0);
-      source.onended = () => {
-        setProcessing(false);
-      };
-    });
+  const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
+    audioContext &&
+      audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+        source.onended = () => {
+          setProcessing(false);
+        };
+      });
   };
 
   React.useEffect(() => {
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
-      fetch(URL.createObjectURL(new Blob([audio])))
-        .then((response) => response.arrayBuffer())
-        .then(playArrayBuffer);
+      audio &&
+        fetch(URL.createObjectURL(new Blob([audio])))
+          .then((response) => response.arrayBuffer())
+          .then(playArrayBuffer);
     }
   }, [audioQueue, processing]);
 
-  const queueAudio = (audio) => {
+  const queueAudio = (audio: Buffer) => {
     setAudioQueue((prev) => [...prev, audio]);
   };
-
-  const waveformRef = React.useRef();
 
   const streamMicrophoneAudioToSocket = async () => {
     let audioStreamToUse;
@@ -199,20 +196,19 @@ function App() {
         setAudioStream(audioStreamToUse);
         console.log("Access to microphone granted");
       } catch (error) {
-        throw new Error(`
-          MediaDevices.getUserMedia() threw an error. 
-          Stream did not open.
-          ${error.name} - 
-          ${error.message}
-        `);
+        console.log(error);
       }
     } else {
       audioStreamToUse = audioStream;
     }
-    setRecorder(new MediaRecorder(audioStreamToUse, { mimeType: "audio/wav" }));
+    audioStreamToUse &&
+      setRecorder(
+        new MediaRecorder(audioStreamToUse, { mimeType: "audio/wav" })
+      );
   };
 
   const stopRecording = () => {
+    if (!recorder || !socket) return;
     recorder.stop();
     socket.send(
       JSON.stringify({
@@ -224,51 +220,45 @@ function App() {
   };
 
   const startConversation = async () => {
+    if (!audioContext) return;
     setCallStatus(CallStatus.CONNECTING);
     audioContext.resume();
 
-    setWaveSurfer(
-      WaveSurfer.create({
-        container: waveformRef.current,
-      })
-    );
+    waveformRef.current &&
+      setWaveSurfer(
+        WaveSurfer.create({
+          container: waveformRef.current,
+        })
+      );
 
     const newSocket = new WebSocket("wss://17a02dfcc41b.ngrok.io/websocket");
     setSocket(newSocket);
 
     await streamMicrophoneAudioToSocket();
   };
-
   return (
-    <ChakraProvider>
-      <DarkModeProvider>
-        <Flex height={"100vh"} align={"center"} direction="column">
-          <Spacer />
-          <Box height={"70vh"}>
-            <VStack>
-              <Button
-                variant="link"
-                disabled={[CallStatus.CONNECTING, CallStatus.ERROR].includes(
-                  callStatus
-                )}
-                onClick={
-                  callStatus === CallStatus.CONNECTED
-                    ? stopRecording
-                    : startConversation
-                }
-              >
-                <motion.div animate={pulse}>
-                  <PhoneIcon boxSize={100} />
-                </motion.div>
-              </Button>
-              <div className="wavesurfer" ref={waveformRef}></div>
-              {callStatus == CallStatus.CONNECTING && <Spinner />}
-            </VStack>
-          </Box>
-        </Flex>
-      </DarkModeProvider>
-    </ChakraProvider>
+    <VStack>
+      <Button
+        variant="link"
+        disabled={[CallStatus.CONNECTING, CallStatus.ERROR].includes(
+          callStatus
+        )}
+        onClick={
+          callStatus === CallStatus.CONNECTED
+            ? stopRecording
+            : startConversation
+        }
+      >
+        <motion.div animate={pulse}>
+          <PhoneIcon boxSize={100} />
+        </motion.div>
+      </Button>
+      {waveformRef.current && (
+        <div className="wavesurfer" ref={waveformRef}></div>
+      )}
+      {callStatus == CallStatus.CONNECTING && <Spinner />}
+    </VStack>
   );
-}
+};
 
-export default App;
+export default Conversation;
