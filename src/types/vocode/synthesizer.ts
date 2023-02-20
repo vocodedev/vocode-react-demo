@@ -6,6 +6,7 @@ export interface SynthesizerConfig {
   type: string;
   samplingRate: number;
   audioEncoding: AudioEncoding;
+  shouldEncodeAsWav: boolean;
 }
 
 export interface AzureSynthesizerConfig extends SynthesizerConfig {

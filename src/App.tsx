@@ -38,6 +38,7 @@ const App = () => {
     "samplingRate" | "audioEncoding"
   > = {
     type: "azure",
+    shouldEncodeAsWav: true,
   };
 
   return (

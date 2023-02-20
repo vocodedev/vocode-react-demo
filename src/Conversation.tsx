@@ -13,11 +13,7 @@ const Conversation = ({
   conversationConfig: ConversationConfig;
 }) => {
   const pulse = useAnimation();
-  const waveSurferRef = React.useRef<HTMLDivElement>(null);
-  const [status, start, stop] = useConversation(
-    waveSurferRef,
-    conversationConfig
-  );
+  const [status, start, stop] = useConversation(conversationConfig);
   const prevStatus = React.useRef(status);
 
   React.useEffect(() => {
@@ -60,7 +56,6 @@ const Conversation = ({
           <PhoneIcon boxSize={100} />
         </motion.div>
       </Button>
-      <div className="wavesurfer" ref={waveSurferRef}></div>
       {status == ConversationStatus.CONNECTING && <Spinner />}
     </VStack>
   );

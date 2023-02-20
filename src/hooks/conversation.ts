@@ -4,7 +4,6 @@ import {
   register,
 } from "extendable-media-recorder";
 import { connect } from "extendable-media-recorder-wav-encoder";
-import WaveSurfer from "wavesurfer.js";
 import { Buffer } from "buffer";
 import React from "react";
 import {
@@ -21,7 +20,6 @@ import {
 } from "../types/vocode/websocket";
 
 export const useConversation = (
-  waveSurferRef: React.RefObject<HTMLElement>,
   config: ConversationConfig
 ): [symbol, () => void, () => void] => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
@@ -30,7 +28,6 @@ export const useConversation = (
   const [audioStream, setAudioStream] = React.useState<MediaStream>();
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
   const [socket, setSocket] = React.useState<WebSocket>();
-  const [waveSurfer, setWaveSurfer] = React.useState<WaveSurfer>();
   const [audioMetadata, setAudioMetadata] = React.useState<AudioMetadata>();
   const [status, setStatus] = React.useState(ConversationStatus.IDLE);
 
@@ -48,17 +45,9 @@ export const useConversation = (
   React.useEffect(() => {
     if (!recorder || !socket) return;
     if (status === ConversationStatus.CONNECTING) {
-      recorder.addEventListener("dataavailable", ({ data }: { data: Blob }) => {
-        if (waveSurfer && !audioMetadata) {
-          waveSurfer.loadBlob(data);
-        }
-      });
       recorder.start(10);
     } else if (status === ConversationStatus.CONNECTED) {
       recorder.addEventListener("dataavailable", ({ data }: { data: Blob }) => {
-        if (waveSurfer && !audioMetadata) {
-          waveSurfer.loadBlob(data);
-        }
         blobToBase64(data).then((base64Encoded: string | null) => {
           if (!base64Encoded) return;
           const audioMessage: AudioMessage = {
@@ -72,16 +61,12 @@ export const useConversation = (
   }, [recorder, status]);
 
   React.useEffect(() => {
-    if (!waveSurfer) return;
-    waveSurfer.on("ready", function () {
-      // @ts-ignore
-      let samplingRate = waveSurfer.backend.ac.sampleRate;
-      // let audioEncoding = waveSurfer.params.backend;
-      let audioEncoding = "linear16" as AudioEncoding;
-      console.log({ samplingRate, audioEncoding });
-      setAudioMetadata({ samplingRate, audioEncoding });
-    });
-  }, [waveSurfer]);
+    if (!audioContext) return;
+    let samplingRate = audioContext.sampleRate;
+    let audioEncoding = "linear16" as AudioEncoding;
+    console.log({ samplingRate, audioEncoding });
+    setAudioMetadata({ samplingRate, audioEncoding });
+  }, [audioContext]);
 
   React.useEffect(() => {
     if (!socket) return;
@@ -199,16 +184,7 @@ export const useConversation = (
     setStatus(ConversationStatus.CONNECTING);
     audioContext.resume();
 
-    waveSurferRef.current &&
-      setWaveSurfer(
-        WaveSurfer.create({
-          container: waveSurferRef.current,
-        })
-      );
-
-    const newSocket = new WebSocket(
-      `wss://${process.env.REACT_APP_BACKEND_URL}/conversation`
-    );
+    const newSocket = new WebSocket(`wss://api.vocode.dev/conversation`);
     setSocket(newSocket);
 
     await streamMicrophoneAudioToSocket();
