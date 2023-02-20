@@ -175,6 +175,7 @@ export const useConversation = (
       type: "stop",
     };
     socket.send(stringify(stopMessage));
+    socket.close();
     setAudioQueue([]);
     setStatus(ConversationStatus.IDLE);
   };
