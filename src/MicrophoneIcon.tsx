@@ -2,12 +2,18 @@ import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import { Box, Center, Icon } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MicrophoneIcon = ({ muted }: { muted: boolean }) => {
+const MicrophoneIcon = ({
+  muted,
+  color,
+}: {
+  muted: boolean;
+  color: string;
+}) => {
   return (
     <AnimatePresence>
       <svg
-        stroke="currentColor"
-        fill="currentColor"
+        stroke={color || "currentColor"}
+        fill={color || "currentColor"}
         stroke-width="0"
         viewBox="0 0 352 512"
         focusable="false"
@@ -29,7 +35,7 @@ const MicrophoneIcon = ({ muted }: { muted: boolean }) => {
           animate={{ pathLength: muted ? 1 : 0 }}
           transition={{ duration: 0.5 }}
           filter="drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));"
-          stroke="currentColor"
+          stroke={color || "currentColor"}
           strokeWidth={30}
           d="M10 10l332 492"
         />

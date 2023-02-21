@@ -6,6 +6,7 @@ import Siriwave from "react-siriwave";
 import MicrophoneIcon from "./MicrophoneIcon";
 
 const MAX_AMPLITUDE = 2;
+const GRAY = "#718096";
 
 const Conversation = ({
   conversationConfig,
@@ -15,7 +16,6 @@ const Conversation = ({
   const [status, start, stop, currentAudioBuffer] =
     useConversation(conversationConfig);
   const [waveAmplitude, setWaveAmplitude] = React.useState(0.0);
-  const { colorMode } = useColorMode();
 
   React.useEffect(() => {
     const amplitude = Math.min(
@@ -40,7 +40,10 @@ const Conversation = ({
         onClick={status === ConversationStatus.CONNECTED ? stop : start}
       >
         <Box boxSize={100}>
-          <MicrophoneIcon muted={status !== ConversationStatus.CONNECTED} />
+          <MicrophoneIcon
+            color={GRAY}
+            muted={status !== ConversationStatus.CONNECTED}
+          />
         </Box>
       </Button>
       <Box boxSize={50} />
@@ -49,12 +52,9 @@ const Conversation = ({
           <Spinner />
         </Box>
       )}
-      {status === ConversationStatus.CONNECTED && (
-        <Siriwave
-          color={colorMode === "light" ? "#718096" : "white"}
-          amplitude={waveAmplitude}
-        />
-      )}
+      {/* {status === ConversationStatus.CONNECTED && ( */}
+      <Siriwave color={GRAY} amplitude={waveAmplitude} />
+      {/* )} */}
     </VStack>
   );
 };
