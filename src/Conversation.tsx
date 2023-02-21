@@ -1,15 +1,11 @@
-import "./Conversation.css";
-
-import { Box, Button, Spinner, useColorMode, VStack } from "@chakra-ui/react";
+import { Box, Button, Spinner, VStack } from "@chakra-ui/react";
 import React from "react";
-import { PhoneIcon } from "@chakra-ui/icons";
-import { motion, useAnimation, useMotionValue, animate } from "framer-motion";
 import { ConversationConfig, ConversationStatus } from "./types/conversation";
 import { useConversation } from "./hooks/conversation";
-import { FaMicrophone } from "react-icons/fa";
-import { Icon } from "@chakra-ui/react";
+import Siriwave from "react-siriwave";
+import MicrophoneIcon from "./MicrophoneIcon";
 
-const PHONE_CALL_ROTATION_DEGREES = 137;
+const MAX_AMPLITUDE = 2;
 
 const Conversation = ({
   conversationConfig,
@@ -18,22 +14,19 @@ const Conversation = ({
 }) => {
   const [status, start, stop, currentAudioBuffer] =
     useConversation(conversationConfig);
-
-  const prevStatus = React.useRef(status);
-  const [micColor, setMicColor] = React.useState("gray.400");
+  const [waveAmplitude, setWaveAmplitude] = React.useState(0.0);
 
   React.useEffect(() => {
-    if (status === ConversationStatus.CONNECTED) {
-      setMicColor("blue.400");
-    }
-    if (
-      prevStatus.current === ConversationStatus.CONNECTED &&
-      [ConversationStatus.ERROR, ConversationStatus.IDLE].includes(status)
-    ) {
-      setMicColor("gray.400");
-    }
-    prevStatus.current = status;
-  }, [status]);
+    const amplitude = Math.min(
+      currentAudioBuffer.reduce((acc, val) => {
+        return acc + Math.abs(val);
+      }, 0) /
+        currentAudioBuffer.length /
+        50,
+      MAX_AMPLITUDE
+    );
+    setWaveAmplitude(amplitude);
+  }, [currentAudioBuffer]);
 
   return (
     <VStack>
@@ -45,11 +38,19 @@ const Conversation = ({
         ].includes(status)}
         onClick={status === ConversationStatus.CONNECTED ? stop : start}
       >
-        <Box padding={4}>
-          <Icon color={micColor} as={FaMicrophone} boxSize={100} />
+        <Box boxSize={100}>
+          <MicrophoneIcon muted={status !== ConversationStatus.CONNECTED} />
         </Box>
       </Button>
-      {status === ConversationStatus.CONNECTING && <Spinner />}
+      <Box boxSize={50} />
+      {status === ConversationStatus.CONNECTING && (
+        <Box padding={5}>
+          <Spinner />
+        </Box>
+      )}
+      {status === ConversationStatus.CONNECTED && (
+        <Siriwave amplitude={waveAmplitude} />
+      )}
     </VStack>
   );
 };

@@ -21,11 +21,12 @@ import {
 
 export const useConversation = (
   config: ConversationConfig
-): [symbol, () => void, () => void, AudioBuffer?] => {
+): [symbol, () => void, () => void, Buffer] => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
   const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
-  const [currentAudioBuffer, setCurrentAudioBuffer] =
-    React.useState<AudioBuffer>();
+  const [currentAudioBuffer, setCurrentAudioBuffer] = React.useState<Buffer>(
+    Buffer.from([0])
+  );
   const [processing, setProcessing] = React.useState(false);
   const [audioStream, setAudioStream] = React.useState<MediaStream>();
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
@@ -123,12 +124,12 @@ export const useConversation = (
     const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
       audioContext &&
         audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-          setCurrentAudioBuffer(buffer);
           const source = audioContext.createBufferSource();
           source.buffer = buffer;
           source.connect(audioContext.destination);
           source.start(0);
           source.onended = () => {
+            setCurrentAudioBuffer(Buffer.from([0]));
             setProcessing(false);
           };
         });
@@ -144,6 +145,7 @@ export const useConversation = (
   }, [audioQueue, processing]);
 
   const queueAudio = (audio: Buffer) => {
+    setCurrentAudioBuffer(audio);
     setAudioQueue((prev) => [...prev, audio]);
   };
 
