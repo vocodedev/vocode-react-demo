@@ -1,4 +1,4 @@
-import { Box, Button, Spinner, VStack } from "@chakra-ui/react";
+import { Box, Button, Spinner, useColorMode, VStack } from "@chakra-ui/react";
 import React from "react";
 import { ConversationConfig, ConversationStatus } from "./types/conversation";
 import { useConversation } from "./hooks/conversation";
@@ -15,6 +15,7 @@ const Conversation = ({
   const [status, start, stop, currentAudioBuffer] =
     useConversation(conversationConfig);
   const [waveAmplitude, setWaveAmplitude] = React.useState(0.0);
+  const { colorMode } = useColorMode();
 
   React.useEffect(() => {
     const amplitude = Math.min(
@@ -49,7 +50,10 @@ const Conversation = ({
         </Box>
       )}
       {status === ConversationStatus.CONNECTED && (
-        <Siriwave amplitude={waveAmplitude} />
+        <Siriwave
+          color={colorMode === "light" ? "#718096" : "white"}
+          amplitude={waveAmplitude}
+        />
       )}
     </VStack>
   );
