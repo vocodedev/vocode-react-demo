@@ -8,7 +8,6 @@ import { ConversationConfig, ConversationStatus } from "./types/conversation";
 import { useConversation } from "./hooks/conversation";
 import { FaMicrophone } from "react-icons/fa";
 import { Icon } from "@chakra-ui/react";
-import Siriwave from "react-siriwave";
 
 const PHONE_CALL_ROTATION_DEGREES = 137;
 
