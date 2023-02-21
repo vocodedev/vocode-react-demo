@@ -21,9 +21,11 @@ import {
 
 export const useConversation = (
   config: ConversationConfig
-): [symbol, () => void, () => void] => {
+): [symbol, () => void, () => void, AudioBuffer?] => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
   const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
+  const [currentAudioBuffer, setCurrentAudioBuffer] =
+    React.useState<AudioBuffer>();
   const [processing, setProcessing] = React.useState(false);
   const [audioStream, setAudioStream] = React.useState<MediaStream>();
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
@@ -117,20 +119,20 @@ export const useConversation = (
     }
   }, [audioMetadata, status]);
 
-  const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
-    audioContext &&
-      audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-        const source = audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContext.destination);
-        source.start(0);
-        source.onended = () => {
-          setProcessing(false);
-        };
-      });
-  };
-
   React.useEffect(() => {
+    const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
+      audioContext &&
+        audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+          setCurrentAudioBuffer(buffer);
+          const source = audioContext.createBufferSource();
+          source.buffer = buffer;
+          source.connect(audioContext.destination);
+          source.start(0);
+          source.onended = () => {
+            setProcessing(false);
+          };
+        });
+    };
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
@@ -185,11 +187,13 @@ export const useConversation = (
     setStatus(ConversationStatus.CONNECTING);
     audioContext.resume();
 
-    const newSocket = new WebSocket(`wss://api.vocode.dev/conversation`);
+    const newSocket = new WebSocket(
+      `wss://${process.env.REACT_APP_BACKEND_URL}/conversation`
+    );
     setSocket(newSocket);
 
     await streamMicrophoneAudioToSocket();
   };
 
-  return [status, startConversation, stopConversation];
+  return [status, startConversation, stopConversation, currentAudioBuffer];
 };

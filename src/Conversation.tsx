@@ -1,9 +1,14 @@
-import { Button, Spinner, VStack } from "@chakra-ui/react";
+import "./Conversation.css";
+
+import { Box, Button, Spinner, useColorMode, VStack } from "@chakra-ui/react";
 import React from "react";
 import { PhoneIcon } from "@chakra-ui/icons";
-import { motion, useAnimation } from "framer-motion";
+import { motion, useAnimation, useMotionValue, animate } from "framer-motion";
 import { ConversationConfig, ConversationStatus } from "./types/conversation";
 import { useConversation } from "./hooks/conversation";
+import { FaMicrophone } from "react-icons/fa";
+import { Icon } from "@chakra-ui/react";
+import Siriwave from "react-siriwave";
 
 const PHONE_CALL_ROTATION_DEGREES = 137;
 
@@ -12,32 +17,21 @@ const Conversation = ({
 }: {
   conversationConfig: ConversationConfig;
 }) => {
-  const pulse = useAnimation();
-  const [status, start, stop] = useConversation(conversationConfig);
-  const prevStatus = React.useRef(status);
+  const [status, start, stop, currentAudioBuffer] =
+    useConversation(conversationConfig);
 
-  React.useEffect(() => {
-    pulse.start({
-      rotate: PHONE_CALL_ROTATION_DEGREES,
-      transition: { duration: 0 },
-    });
-  }, []);
+  const prevStatus = React.useRef(status);
+  const [micColor, setMicColor] = React.useState("gray.400");
 
   React.useEffect(() => {
     if (status === ConversationStatus.CONNECTED) {
-      pulse.start({
-        rotate: 0,
-        transition: { duration: 1 },
-      });
+      setMicColor("blue.400");
     }
     if (
       prevStatus.current === ConversationStatus.CONNECTED &&
       [ConversationStatus.ERROR, ConversationStatus.IDLE].includes(status)
     ) {
-      pulse.start({
-        rotate: PHONE_CALL_ROTATION_DEGREES,
-        transition: { duration: 1 },
-      });
+      setMicColor("gray.400");
     }
     prevStatus.current = status;
   }, [status]);
@@ -52,11 +46,11 @@ const Conversation = ({
         ].includes(status)}
         onClick={status === ConversationStatus.CONNECTED ? stop : start}
       >
-        <motion.div animate={pulse}>
-          <PhoneIcon boxSize={100} />
-        </motion.div>
+        <Box padding={4}>
+          <Icon color={micColor} as={FaMicrophone} boxSize={100} />
+        </Box>
       </Button>
-      {status == ConversationStatus.CONNECTING && <Spinner />}
+      {status === ConversationStatus.CONNECTING && <Spinner />}
     </VStack>
   );
 };

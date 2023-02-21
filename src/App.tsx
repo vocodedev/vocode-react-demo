@@ -15,11 +15,8 @@ import Conversation from "./Conversation";
 import { isIE, isMobile } from "react-device-detect";
 import { WarningIcon } from "@chakra-ui/icons";
 import { DeepgramTranscriberConfig } from "./types/vocode/transcriber";
-import { LLMAgentConfig } from "./types/vocode/agent";
-import {
-  AzureSynthesizerConfig,
-  SynthesizerConfig,
-} from "./types/vocode/synthesizer";
+import { EchoAgentConfig } from "./types/vocode/agent";
+import { AzureSynthesizerConfig } from "./types/vocode/synthesizer";
 
 const App = () => {
   const transcriberConfig: Omit<
@@ -29,9 +26,8 @@ const App = () => {
     type: "deepgram",
     chunkSize: 2048,
   };
-  const agentConfig: LLMAgentConfig = {
-    type: "llm",
-    promptPreamble: "The AI is having a pleasant conversation about life.",
+  const agentConfig: EchoAgentConfig = {
+    type: "echo",
   };
   const synthesizerConfig: Omit<
     AzureSynthesizerConfig,
