@@ -6,7 +6,7 @@ import Siriwave from "react-siriwave";
 import MicrophoneIcon from "./MicrophoneIcon";
 
 const MAX_AMPLITUDE = 2;
-const GRAY = "#718096";
+const GRAY = "#A0AEC0";
 
 const Conversation = ({
   conversationConfig,
