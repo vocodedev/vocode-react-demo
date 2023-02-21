@@ -52,9 +52,9 @@ const Conversation = ({
           <Spinner />
         </Box>
       )}
-      {/* {status === ConversationStatus.CONNECTED && ( */}
-      <Siriwave color={GRAY} amplitude={waveAmplitude} />
-      {/* )} */}
+      {status === ConversationStatus.CONNECTED && (
+        <Siriwave color={GRAY} amplitude={waveAmplitude} />
+      )}
     </VStack>
   );
 };
