@@ -15,7 +15,7 @@ import Conversation from "./Conversation";
 import { isIE, isMobile } from "react-device-detect";
 import { WarningIcon } from "@chakra-ui/icons";
 import { DeepgramTranscriberConfig } from "./types/vocode/transcriber";
-import { EchoAgentConfig, LLMAgentConfig } from "./types/vocode/agent";
+import { LLMAgentConfig } from "./types/vocode/agent";
 import { AzureSynthesizerConfig } from "./types/vocode/synthesizer";
 
 const App = () => {
