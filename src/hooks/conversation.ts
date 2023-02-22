@@ -57,7 +57,8 @@ export const useConversation = (
             type: "audio",
             data: base64Encoded,
           };
-          socket.send(stringify(audioMessage));
+          socket.readyState === WebSocket.OPEN &&
+            socket.send(stringify(audioMessage));
         });
       });
     }
@@ -83,6 +84,9 @@ export const useConversation = (
       } else if (message.type === "ready") {
         setStatus(ConversationStatus.CONNECTED);
       }
+    };
+    socket.onclose = () => {
+      stopConversation();
     };
   }, [socket]);
 
@@ -173,15 +177,16 @@ export const useConversation = (
   };
 
   const stopConversation = () => {
+    setAudioQueue([]);
+    setStatus(ConversationStatus.IDLE);
     if (!recorder || !socket) return;
     recorder.stop();
     const stopMessage: StopMessage = {
       type: "stop",
     };
     socket.send(stringify(stopMessage));
-    socket.close();
-    setAudioQueue([]);
-    setStatus(ConversationStatus.IDLE);
+    ![WebSocket.CLOSING, WebSocket.CLOSED].includes(socket.readyState) &&
+      socket.close();
   };
 
   const startConversation = async () => {
