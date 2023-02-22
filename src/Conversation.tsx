@@ -39,6 +39,7 @@ const Conversation = ({
         ].includes(status)}
         onClick={status === ConversationStatus.CONNECTED ? stop : start}
       >
+        {/* <AudioVisualization muted={status !== ConversationStatus.CONNECTED} /> */}
         <Box boxSize={100}>
           <MicrophoneIcon
             color={GRAY}

@@ -28,7 +28,8 @@ const App = () => {
   };
   const agentConfig: LLMAgentConfig = {
     type: "llm",
-    promptPreamble: "The AI is having a pleasant conversation about life.",
+    promptPreamble:
+      "Vocode is an SDK that allows developers to create voice bots like this one in less than 10 lines of code. The AI is explaining to the human what Vocode is.",
   };
   const synthesizerConfig: Omit<
     AzureSynthesizerConfig,
