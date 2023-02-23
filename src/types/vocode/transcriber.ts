@@ -12,6 +12,7 @@ export interface TranscriberConfig {
 export interface DeepgramTranscriberConfig extends TranscriberConfig {
   type: "deepgram";
   model?: string;
+  tier?: string;
   shouldWarmupModel?: boolean;
   version?: string;
 }

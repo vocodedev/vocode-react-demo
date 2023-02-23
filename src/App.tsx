@@ -24,10 +24,12 @@ const App = () => {
     "samplingRate" | "audioEncoding"
   > = {
     type: "deepgram",
+    model: "conversationalai",
     chunkSize: 2048,
   };
   const agentConfig: LLMAgentConfig = {
     type: "llm",
+    initialMessage: "Hello!",
     promptPreamble:
       "Vocode is an SDK that allows developers to create voice bots like this one in less than 10 lines of code. The AI is explaining to the human what Vocode is.",
   };
