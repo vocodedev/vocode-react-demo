@@ -1,7 +1,7 @@
 import { Box, Button, Spinner, useColorMode, VStack } from "@chakra-ui/react";
 import React from "react";
-import { ConversationConfig, ConversationStatus } from "./types/conversation";
-import { useConversation } from "./hooks/conversation";
+import { ConversationConfig, ConversationStatus } from "../types/conversation";
+import { useConversation } from "../hooks/conversation";
 import Siriwave from "react-siriwave";
 import MicrophoneIcon from "./MicrophoneIcon";
 

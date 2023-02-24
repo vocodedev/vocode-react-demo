@@ -10,7 +10,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import DarkModeProvider from "./DarkModeProvider";
-import Conversation from "./Conversation";
+import Conversation from "./components/Conversation";
 
 import { isIE, isMobile } from "react-device-detect";
 import { WarningIcon } from "@chakra-ui/icons";
