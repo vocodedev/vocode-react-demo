@@ -5,7 +5,7 @@ import { useConversation } from "./hooks/conversation";
 import Siriwave from "react-siriwave";
 import MicrophoneIcon from "./MicrophoneIcon";
 
-const MAX_AMPLITUDE = 2;
+const MAX_AMPLITUDE = 2.1;
 const GRAY = "#A0AEC0";
 
 const Conversation = ({
