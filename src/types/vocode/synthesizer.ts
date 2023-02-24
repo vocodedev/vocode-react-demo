@@ -17,4 +17,5 @@ export interface GoogleSynthesizerConfig extends SynthesizerConfig {
 }
 export interface ElevenLabsSynthesizerConfig extends SynthesizerConfig {
   type: "eleven_labs";
+  voiceId?: string;
 }

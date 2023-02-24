@@ -122,7 +122,7 @@ export const useConversation = (
         console.error
       );
     }
-  }, [audioMetadata, status]);
+  }, [socket, audioMetadata, status]);
 
   React.useEffect(() => {
     const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
@@ -194,8 +194,21 @@ export const useConversation = (
     setStatus(ConversationStatus.CONNECTING);
     audioContext.resume();
 
+    const resp = await fetch(
+      `https://${process.env.REACT_APP_BACKEND_URL}/auth/token`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.REACT_APP_VOCODE_API_KEY}`,
+        },
+      }
+    );
+    const data = await resp.json();
+    const token = data.token;
+
     const newSocket = new WebSocket(
-      `wss://${process.env.REACT_APP_BACKEND_URL}/conversation`
+      `wss://${process.env.REACT_APP_BACKEND_URL}/conversation?key=${token}`
     );
     setSocket(newSocket);
 
