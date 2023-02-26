@@ -33,27 +33,21 @@ const Conversation = ({
     <VStack>
       <Button
         variant="link"
-        disabled={[
-          ConversationStatus.CONNECTING,
-          ConversationStatus.ERROR,
-        ].includes(status)}
-        onClick={status === ConversationStatus.CONNECTED ? stop : start}
+        disabled={["connecting", "error"].includes(status)}
+        onClick={status === "connected" ? stop : start}
       >
-        {/* <AudioVisualization muted={status !== ConversationStatus.CONNECTED} /> */}
+        {/* <AudioVisualization muted={status !== "connected"} /> */}
         <Box boxSize={100}>
-          <MicrophoneIcon
-            color={GRAY}
-            muted={status !== ConversationStatus.CONNECTED}
-          />
+          <MicrophoneIcon color={GRAY} muted={status !== "connected"} />
         </Box>
       </Button>
       <Box boxSize={50} />
-      {status === ConversationStatus.CONNECTING && (
+      {status === "connecting" && (
         <Box padding={5}>
           <Spinner />
         </Box>
       )}
-      {status === ConversationStatus.CONNECTED && (
+      {status === "connected" && (
         <Siriwave color={GRAY} amplitude={waveAmplitude} />
       )}
     </VStack>

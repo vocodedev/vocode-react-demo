@@ -21,7 +21,7 @@ import {
 
 export const useConversation = (
   config: ConversationConfig
-): [symbol, () => void, () => void, Buffer] => {
+): [ConversationStatus, () => void, () => void, Buffer] => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
   const [audioAnalyser, setAudioAnalyser] = React.useState<AnalyserNode>();
   const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
@@ -33,7 +33,7 @@ export const useConversation = (
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
   const [socket, setSocket] = React.useState<WebSocket>();
   const [audioMetadata, setAudioMetadata] = React.useState<AudioMetadata>();
-  const [status, setStatus] = React.useState(ConversationStatus.IDLE);
+  const [status, setStatus] = React.useState<ConversationStatus>("idle");
 
   // get audio context and metadata about user audio
   React.useEffect(() => {
@@ -49,7 +49,7 @@ export const useConversation = (
   // once the conversation is connected, stream the microphone audio into the socket
   React.useEffect(() => {
     if (!recorder || !socket) return;
-    if (status === ConversationStatus.CONNECTED) {
+    if (status === "connected") {
       recorder.ondataavailable = ({ data }: { data: Blob }) => {
         blobToBase64(data).then((base64Encoded: string | null) => {
           if (!base64Encoded) return;
@@ -99,7 +99,7 @@ export const useConversation = (
 
   const stopConversation = () => {
     setAudioQueue([]);
-    setStatus(ConversationStatus.IDLE);
+    setStatus("idle");
     if (!recorder || !socket) return;
     recorder.stop();
     const stopMessage: StopMessage = {
@@ -112,7 +112,7 @@ export const useConversation = (
 
   const startConversation = async () => {
     if (!audioContext || !audioAnalyser) return;
-    setStatus(ConversationStatus.CONNECTING);
+    setStatus("connecting");
 
     if (audioContext.state === "suspended") {
       audioContext.resume();
@@ -135,7 +135,7 @@ export const useConversation = (
       `wss://${process.env.REACT_APP_BACKEND_URL}/conversation?key=${token}`
     );
     socket.onerror = (error) => {
-      setStatus(ConversationStatus.ERROR);
+      setStatus("error");
     };
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
@@ -144,7 +144,7 @@ export const useConversation = (
         setCurrentAudioBuffer(audio);
         setAudioQueue((prev) => [...prev, audio]);
       } else if (message.type === "ready") {
-        setStatus(ConversationStatus.CONNECTED);
+        setStatus("connected");
       }
     };
     socket.onclose = () => {
