@@ -161,8 +161,8 @@ export const useConversation = (
       audioStream = await navigator.mediaDevices.getUserMedia({
         video: false,
         audio: {
-          echoCancellation: true,
-          autoGainControl: true,
+          // echoCancellation: true,
+          // autoGainControl: true,
           deviceId: config.audioDeviceConfig.inputDeviceId,
         },
       });
@@ -184,7 +184,7 @@ export const useConversation = (
     console.log("Input audio metadata", inputAudioMetadata);
 
     if (!("setSinkId" in AudioContext.prototype)) {
-      alert("Upgrade to Chrome 110 to talk to the bot.")
+      alert("Upgrade to Chrome 110 to talk to the bot.");
       stopConversation("error");
       return;
     }
