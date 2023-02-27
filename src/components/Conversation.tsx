@@ -68,7 +68,7 @@ const Conversation = (props: ConversationComponentProps) => {
 
   return (
     <VStack>
-      <HStack paddingBottom={4}>
+      <HStack paddingBottom={5}>
         <Select
           disabled={["connecting", "connected"].includes(status)}
           onChange={(event) =>
