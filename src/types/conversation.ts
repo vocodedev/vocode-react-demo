@@ -8,6 +8,7 @@ export type ConversationStatus = "idle" | "connecting" | "connected" | "error";
 export type AudioDeviceConfig = {
   inputDeviceId: "default" | string;
   outputDeviceId: "default" | string;
+  outputSamplingRate?: number;
 };
 
 export type ConversationConfig = {

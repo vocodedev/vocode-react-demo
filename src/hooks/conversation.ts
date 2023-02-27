@@ -193,7 +193,8 @@ export const useConversation = (
       await audioContext.setSinkId(config.audioDeviceConfig.outputDeviceId);
     }
     const outputAudioMetadata = {
-      samplingRate: audioContext.sampleRate,
+      samplingRate:
+        config.audioDeviceConfig.outputSamplingRate || audioContext.sampleRate,
       audioEncoding: "linear16" as AudioEncoding,
     };
     console.log("Output audio metadata", inputAudioMetadata);
