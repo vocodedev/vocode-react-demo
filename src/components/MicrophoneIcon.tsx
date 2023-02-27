@@ -18,6 +18,9 @@ const MicrophoneIcon = ({
         viewBox="0 0 352 512"
         focusable="false"
         xmlns="http://www.w3.org/2000/svg"
+        style={{
+          filter: "drop-shadow( 0px 0px 0.75em rgba(256, 256, 256, .5))",
+        }}
       >
         {/* <filter id="shadow" color-interpolation-filters="sRGB">
           <feDropShadow

@@ -167,7 +167,11 @@ export const useConversation = (
         },
       });
     } catch (error) {
-      console.error(error);
+      if (error instanceof DOMException && error.name === "NotAllowedError") {
+        alert(
+          "Allowlist this site at chrome://settings/content/microphone to talk to the bot."
+        );
+      }
       stopConversation("error");
       return;
     }

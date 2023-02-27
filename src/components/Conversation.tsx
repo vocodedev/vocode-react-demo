@@ -37,10 +37,14 @@ const Conversation = (props: ConversationComponentProps) => {
       .enumerateDevices()
       .then((devices) => {
         setInputAudioDevices(
-          devices.filter((device) => device.kind === "audioinput")
+          devices.filter(
+            (device) => device.deviceId && device.kind === "audioinput"
+          )
         );
         setOutputAudioDevices(
-          devices.filter((device) => device.kind === "audiooutput")
+          devices.filter(
+            (device) => device.deviceId && device.kind === "audiooutput"
+          )
         );
       })
       .catch((err) => {
@@ -63,12 +67,13 @@ const Conversation = (props: ConversationComponentProps) => {
       <Box boxSize={50} />
       {status === "connecting" && (
         <Box position={"absolute"} top="54%" left="48%" padding={5}>
-          <Spinner />
+          <Spinner color="#FFFFFF" />
         </Box>
       )}
       {inputAudioDevices.length + outputAudioDevices.length > 0 && (
         <VStack position="absolute" top="40%" left="2%" paddingBottom={5}>
           <Select
+            color={"#FFFFFF"}
             disabled={["connecting", "connected"].includes(status)}
             onChange={(event) =>
               setAudioDeviceConfig({
@@ -87,6 +92,7 @@ const Conversation = (props: ConversationComponentProps) => {
             })}
           </Select>
           <Select
+            color={"#FFFFFF"}
             disabled={["connecting", "connected"].includes(status)}
             onChange={(event) =>
               setAudioDeviceConfig({
