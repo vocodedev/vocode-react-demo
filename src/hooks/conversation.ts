@@ -6,11 +6,7 @@ import {
 import { connect } from "extendable-media-recorder-wav-encoder";
 import { Buffer } from "buffer";
 import React from "react";
-import {
-  AudioMetadata,
-  ConversationConfig,
-  ConversationStatus,
-} from "../types/conversation";
+import { ConversationConfig, ConversationStatus } from "../types/conversation";
 import { blobToBase64, stringify } from "../utils";
 import { AudioEncoding } from "../types/vocode/audioEncoding";
 import {
@@ -25,20 +21,15 @@ export const useConversation = (
   status: ConversationStatus;
   start: () => void;
   stop: () => void;
-  currentAudioBuffer: Buffer;
+  analyserNode: AnalyserNode | undefined;
 } => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
   const [audioAnalyser, setAudioAnalyser] = React.useState<AnalyserNode>();
   const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
-  const [currentAudioBuffer, setCurrentAudioBuffer] = React.useState<Buffer>(
-    Buffer.from([0])
-  );
   const [processing, setProcessing] = React.useState(false);
-  const [audioStream, setAudioStream] = React.useState<MediaStream>();
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
   const [socket, setSocket] = React.useState<WebSocket>();
   const [status, setStatus] = React.useState<ConversationStatus>("idle");
-  const prevConfig = React.useRef<ConversationConfig>();
 
   // get audio context and metadata about user audio
   React.useEffect(() => {
@@ -77,13 +68,14 @@ export const useConversation = (
   React.useEffect(() => {
     const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
       audioContext &&
+        audioAnalyser &&
         audioContext.decodeAudioData(arrayBuffer, (buffer) => {
           const source = audioContext.createBufferSource();
           source.buffer = buffer;
           source.connect(audioContext.destination);
+          source.connect(audioAnalyser);
           source.start(0);
           source.onended = () => {
-            setCurrentAudioBuffer(Buffer.from([0]));
             setProcessing(false);
           };
         });
@@ -103,6 +95,7 @@ export const useConversation = (
     setStatus(status);
     if (!recorder || !socket) return;
     recorder.stop();
+    audioAnalyser && audioAnalyser.disconnect();
     const stopMessage: StopMessage = {
       type: "stop",
     };
@@ -142,7 +135,6 @@ export const useConversation = (
       const message = JSON.parse(event.data);
       if (message.type === "audio") {
         const audio = Buffer.from(message.data, "base64");
-        setCurrentAudioBuffer(audio);
         setAudioQueue((prev) => [...prev, audio]);
       } else if (message.type === "ready") {
         setStatus("connected");
@@ -164,14 +156,21 @@ export const useConversation = (
     });
 
     console.log(await navigator.mediaDevices.enumerateDevices());
-    const audioStream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: {
-        echoCancellation: true,
-        autoGainControl: true,
-        deviceId: config.audioDeviceConfig.inputDeviceId,
-      },
-    });
+    let audioStream;
+    try {
+      audioStream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: {
+          echoCancellation: true,
+          autoGainControl: true,
+          deviceId: config.audioDeviceConfig.inputDeviceId,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      stopConversation("error");
+      return;
+    }
     const micSettings = audioStream.getAudioTracks()[0].getSettings();
     const inputAudioMetadata = {
       samplingRate: micSettings.sampleRate || audioContext.sampleRate,
@@ -207,8 +206,6 @@ export const useConversation = (
     };
 
     socket.send(stringify(startMessage));
-    console.log(audioStream.getAudioTracks()[0].getSettings());
-    setAudioStream(audioStream);
     console.log("Access to microphone granted");
 
     let recorderToUse = recorder;
@@ -222,14 +219,12 @@ export const useConversation = (
     }
 
     recorderToUse.start(10);
-    const source = audioContext.createMediaStreamSource(audioStream);
-    source.connect(audioAnalyser);
   };
 
   return {
     status,
     start: startConversation,
     stop: stopConversation,
-    currentAudioBuffer,
+    analyserNode: audioAnalyser,
   };
 };

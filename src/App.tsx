@@ -18,6 +18,7 @@ import { DeepgramTranscriberConfig } from "./types/vocode/transcriber";
 import { EchoAgentConfig, LLMAgentConfig } from "./types/vocode/agent";
 import { AzureSynthesizerConfig } from "./types/vocode/synthesizer";
 import { AudioDeviceConfig } from "./types/conversation";
+import AudioVisualization from "./components/AudioVisualization";
 
 const App = () => {
   const audioDeviceConfig: AudioDeviceConfig = {
@@ -48,29 +49,25 @@ const App = () => {
 
   return (
     <ChakraProvider>
-      <DarkModeProvider>
-        <Flex height={"100vh"} align={"center"} direction="column">
-          <Spacer />
-          <Box height={"70vh"}>
-            {!isIE && !isMobile ? (
-              <Conversation
-                config={{
-                  transcriberConfig,
-                  agentConfig,
-                  synthesizerConfig,
-                }}
-              />
-            ) : (
-              <VStack>
-                <WarningIcon boxSize={100} />
-                <Text paddingTop={4}>
-                  This demo only works with Chrome on computer!
-                </Text>
-              </VStack>
-            )}
-          </Box>
-        </Flex>
-      </DarkModeProvider>
+      <Flex height={"100vh"} align={"center"} direction="column">
+        <Spacer />
+        {!isIE && !isMobile ? (
+          <Conversation
+            config={{
+              transcriberConfig,
+              agentConfig,
+              synthesizerConfig,
+            }}
+          />
+        ) : (
+          <VStack>
+            <WarningIcon boxSize={100} />
+            <Text paddingTop={4}>
+              This demo only works with Chrome on computer!
+            </Text>
+          </VStack>
+        )}
+      </Flex>
     </ChakraProvider>
   );
 };
