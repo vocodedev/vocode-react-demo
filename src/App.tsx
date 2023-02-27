@@ -17,8 +17,13 @@ import { WarningIcon } from "@chakra-ui/icons";
 import { DeepgramTranscriberConfig } from "./types/vocode/transcriber";
 import { EchoAgentConfig, LLMAgentConfig } from "./types/vocode/agent";
 import { AzureSynthesizerConfig } from "./types/vocode/synthesizer";
+import { AudioDeviceConfig } from "./types/conversation";
 
 const App = () => {
+  const audioDeviceConfig: AudioDeviceConfig = {
+    inputDeviceId: "default",
+    outputDeviceId: "default",
+  };
   const transcriberConfig: Omit<
     DeepgramTranscriberConfig,
     "samplingRate" | "audioEncoding"
@@ -49,7 +54,7 @@ const App = () => {
           <Box height={"70vh"}>
             {!isIE && !isMobile ? (
               <Conversation
-                conversationConfig={{
+                config={{
                   transcriberConfig,
                   agentConfig,
                   synthesizerConfig,

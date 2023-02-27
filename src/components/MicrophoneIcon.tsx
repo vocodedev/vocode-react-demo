@@ -14,7 +14,7 @@ const MicrophoneIcon = ({
       <svg
         stroke={color || "currentColor"}
         fill={color || "currentColor"}
-        stroke-width="0"
+        strokeWidth="0"
         viewBox="0 0 352 512"
         focusable="false"
         xmlns="http://www.w3.org/2000/svg"

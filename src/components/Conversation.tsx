@@ -1,6 +1,14 @@
-import { Box, Button, Spinner, useColorMode, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  HStack,
+  Select,
+  Spinner,
+  useColorMode,
+  VStack,
+} from "@chakra-ui/react";
 import React from "react";
-import { ConversationConfig, ConversationStatus } from "../types/conversation";
+import { ConversationComponentProps } from "../types/conversation";
 import { useConversation } from "../hooks/conversation";
 import Siriwave from "react-siriwave";
 import MicrophoneIcon from "./MicrophoneIcon";
@@ -8,13 +16,20 @@ import MicrophoneIcon from "./MicrophoneIcon";
 const MAX_AMPLITUDE = 2.1;
 const GRAY = "#A0AEC0";
 
-const Conversation = ({
-  conversationConfig,
-}: {
-  conversationConfig: ConversationConfig;
-}) => {
-  const [status, start, stop, currentAudioBuffer] =
-    useConversation(conversationConfig);
+const Conversation = (props: ConversationComponentProps) => {
+  const [audioDeviceConfig, setAudioDeviceConfig] = React.useState({
+    inputDeviceId: "default",
+    outputDeviceId: "default",
+  });
+  const [inputAudioDevices, setInputAudioDevices] = React.useState<
+    MediaDeviceInfo[]
+  >([]);
+  const [outputAudioDevices, setOutputAudioDevices] = React.useState<
+    MediaDeviceInfo[]
+  >([]);
+  const { status, start, stop, currentAudioBuffer } = useConversation(
+    Object.assign(props.config, { audioDeviceConfig })
+  );
   const [waveAmplitude, setWaveAmplitude] = React.useState(0.0);
 
   React.useEffect(() => {
@@ -29,14 +44,73 @@ const Conversation = ({
     setWaveAmplitude(amplitude);
   }, [currentAudioBuffer]);
 
+  React.useEffect(() => {
+    navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => {
+        setInputAudioDevices(
+          devices.filter(
+            (device) =>
+              device.kind === "audioinput" && device.deviceId !== "default"
+          )
+        );
+        setOutputAudioDevices(
+          devices.filter(
+            (device) =>
+              device.kind === "audiooutput" && device.deviceId !== "default"
+          )
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  });
+
   return (
     <VStack>
+      <HStack paddingBottom={4}>
+        <Select
+          disabled={["connecting", "connected"].includes(status)}
+          onChange={(event) =>
+            setAudioDeviceConfig({
+              ...audioDeviceConfig,
+              inputDeviceId: event.target.value,
+            })
+          }
+          value={audioDeviceConfig.inputDeviceId}
+        >
+          {inputAudioDevices.map((device, i) => {
+            return (
+              <option key={i} value={device.deviceId}>
+                {device.label}
+              </option>
+            );
+          })}
+        </Select>
+        <Select
+          disabled={["connecting", "connected"].includes(status)}
+          onChange={(event) =>
+            setAudioDeviceConfig({
+              ...audioDeviceConfig,
+              outputDeviceId: event.target.value,
+            })
+          }
+          value={audioDeviceConfig.outputDeviceId}
+        >
+          {outputAudioDevices.map((device, i) => {
+            return (
+              <option key={i} value={device.deviceId}>
+                {device.label}
+              </option>
+            );
+          })}
+        </Select>
+      </HStack>
       <Button
         variant="link"
         disabled={["connecting", "error"].includes(status)}
         onClick={status === "connected" ? stop : start}
       >
-        {/* <AudioVisualization muted={status !== "connected"} /> */}
         <Box boxSize={100}>
           <MicrophoneIcon color={GRAY} muted={status !== "connected"} />
         </Box>

@@ -21,7 +21,12 @@ import {
 
 export const useConversation = (
   config: ConversationConfig
-): [ConversationStatus, () => void, () => void, Buffer] => {
+): {
+  status: ConversationStatus;
+  start: () => void;
+  stop: () => void;
+  currentAudioBuffer: Buffer;
+} => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
   const [audioAnalyser, setAudioAnalyser] = React.useState<AnalyserNode>();
   const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
@@ -32,18 +37,14 @@ export const useConversation = (
   const [audioStream, setAudioStream] = React.useState<MediaStream>();
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
   const [socket, setSocket] = React.useState<WebSocket>();
-  const [audioMetadata, setAudioMetadata] = React.useState<AudioMetadata>();
   const [status, setStatus] = React.useState<ConversationStatus>("idle");
+  const prevConfig = React.useRef<ConversationConfig>();
 
   // get audio context and metadata about user audio
   React.useEffect(() => {
     const audioContext = new window.AudioContext();
     setAudioContext(audioContext);
     setAudioAnalyser(audioContext.createAnalyser());
-    let samplingRate = audioContext.sampleRate;
-    let audioEncoding = "linear16" as AudioEncoding;
-    console.log({ samplingRate, audioEncoding });
-    setAudioMetadata({ samplingRate, audioEncoding });
   }, []);
 
   // once the conversation is connected, stream the microphone audio into the socket
@@ -97,9 +98,9 @@ export const useConversation = (
     }
   }, [audioQueue, processing]);
 
-  const stopConversation = () => {
+  const stopConversation = (status: ConversationStatus = "idle") => {
     setAudioQueue([]);
-    setStatus("idle");
+    setStatus(status);
     if (!recorder || !socket) return;
     recorder.stop();
     const stopMessage: StopMessage = {
@@ -162,21 +163,51 @@ export const useConversation = (
       }, 100);
     });
 
-    const startMessage: StartMessage = {
-      type: "start",
-      transcriberConfig: Object.assign(config.transcriberConfig, audioMetadata),
-      agentConfig: config.agentConfig,
-      synthesizerConfig: Object.assign(config.synthesizerConfig, audioMetadata),
-    };
-    socket.send(stringify(startMessage));
-
+    console.log(await navigator.mediaDevices.enumerateDevices());
     const audioStream = await navigator.mediaDevices.getUserMedia({
       video: false,
       audio: {
         echoCancellation: true,
         autoGainControl: true,
+        deviceId: config.audioDeviceConfig.inputDeviceId,
       },
     });
+    const micSettings = audioStream.getAudioTracks()[0].getSettings();
+    const inputAudioMetadata = {
+      samplingRate: micSettings.sampleRate || audioContext.sampleRate,
+      audioEncoding: "linear16" as AudioEncoding,
+    };
+    console.log("Input audio metadata", inputAudioMetadata);
+
+    if (!("setSinkId" in AudioContext.prototype)) {
+      stopConversation("error");
+      return;
+    }
+    if (config.audioDeviceConfig.outputDeviceId !== "default") {
+      // @ts-ignore - setSinkId is not in the typescript definition
+      await audioContext.setSinkId(config.audioDeviceConfig.outputDeviceId);
+    }
+    const outputAudioMetadata = {
+      samplingRate: audioContext.sampleRate,
+      audioEncoding: "linear16" as AudioEncoding,
+    };
+    console.log("Output audio metadata", inputAudioMetadata);
+
+    const startMessage: StartMessage = {
+      type: "start",
+      transcriberConfig: Object.assign(
+        config.transcriberConfig,
+        inputAudioMetadata
+      ),
+      agentConfig: config.agentConfig,
+      synthesizerConfig: Object.assign(
+        config.synthesizerConfig,
+        outputAudioMetadata
+      ),
+    };
+
+    socket.send(stringify(startMessage));
+    console.log(audioStream.getAudioTracks()[0].getSettings());
     setAudioStream(audioStream);
     console.log("Access to microphone granted");
 
@@ -195,5 +226,10 @@ export const useConversation = (
     source.connect(audioAnalyser);
   };
 
-  return [status, startConversation, stopConversation, currentAudioBuffer];
+  return {
+    status,
+    start: startConversation,
+    stop: stopConversation,
+    currentAudioBuffer,
+  };
 };
