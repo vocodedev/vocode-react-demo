@@ -1,21 +1,9 @@
-import {
-  Box,
-  Button,
-  HStack,
-  Select,
-  Spinner,
-  useColorMode,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Button, Select, Spinner, VStack } from "@chakra-ui/react";
 import React from "react";
 import { ConversationComponentProps } from "../types/conversation";
 import { useConversation } from "../hooks/conversation";
-import Siriwave from "react-siriwave";
 import MicrophoneIcon from "./MicrophoneIcon";
 import AudioVisualization from "./AudioVisualization";
-
-const MAX_AMPLITUDE = 2.1;
-const GRAY = "#A0AEC0";
 
 const Conversation = (props: ConversationComponentProps) => {
   const [audioDeviceConfig, setAudioDeviceConfig] = React.useState({
@@ -60,18 +48,18 @@ const Conversation = (props: ConversationComponentProps) => {
         onClick={status === "connected" ? stop : start}
       >
         {analyserNode && <AudioVisualization analyser={analyserNode} />}
-        <Box position={"absolute"} top="40%" left="47.6%" boxSize={75}>
+        <Box position={"absolute"} top={"42%"} left="47.6%" boxSize={75}>
           <MicrophoneIcon color={"#FFFFFF"} muted={status !== "connected"} />
         </Box>
       </Button>
       <Box boxSize={50} />
       {status === "connecting" && (
-        <Box position={"absolute"} top="54%" left="48%" padding={5}>
+        <Box position={"absolute"} top="55%" left="48%" padding={5}>
           <Spinner color="#FFFFFF" />
         </Box>
       )}
       {inputAudioDevices.length + outputAudioDevices.length > 0 && (
-        <VStack position="absolute" top="40%" left="2%" paddingBottom={5}>
+        <VStack position="absolute" top={"42%"} left="2%" paddingBottom={5}>
           <Select
             color={"#FFFFFF"}
             disabled={["connecting", "connected"].includes(status)}
