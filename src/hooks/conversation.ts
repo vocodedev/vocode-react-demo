@@ -172,6 +172,7 @@ export const useConversation = (
           "Allowlist this site at chrome://settings/content/microphone to talk to the bot."
         );
       }
+      console.error(error);
       stopConversation("error");
       return;
     }
@@ -183,6 +184,7 @@ export const useConversation = (
     console.log("Input audio metadata", inputAudioMetadata);
 
     if (!("setSinkId" in AudioContext.prototype)) {
+      alert("Upgrade to Chrome 110 to talk to the bot.")
       stopConversation("error");
       return;
     }
