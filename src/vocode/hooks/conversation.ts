@@ -153,7 +153,6 @@ export const useConversation = (
         video: false,
         audio: {
           echoCancellation: true,
-          autoGainControl: true,
         },
       });
     } catch (error) {
