@@ -50,7 +50,7 @@ export const useConversation = (
   React.useEffect(() => {
     if (!recorder || !socket) return;
     if (status === "connected") {
-      recorder.ondataavailable = ({ data }: { data: Blob }) => {
+      recorder.addEventListener("dataavailable", ({ data }: { data: Blob }) => {
         blobToBase64(data).then((base64Encoded: string | null) => {
           if (!base64Encoded) return;
           const audioMessage: AudioMessage = {
@@ -60,7 +60,7 @@ export const useConversation = (
           socket.readyState === WebSocket.OPEN &&
             socket.send(stringify(audioMessage));
         });
-      };
+      });
     }
   }, [recorder, socket, status]);
 
