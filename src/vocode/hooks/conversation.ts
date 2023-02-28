@@ -4,7 +4,6 @@ import {
   register,
 } from "extendable-media-recorder";
 import { connect } from "extendable-media-recorder-wav-encoder";
-import { Buffer } from "buffer";
 import React from "react";
 import { ConversationConfig, ConversationStatus } from "../types/conversation";
 import { blobToBase64, stringify } from "../utils";
@@ -149,11 +148,19 @@ export const useConversation = (
 
     let audioStream;
     try {
+      const trackConstraints: MediaTrackConstraints = {
+        echoCancellation: true,
+      };
+      if (config.audioDeviceConfig.inputDeviceId) {
+        console.log(
+          "Using input device",
+          config.audioDeviceConfig.inputDeviceId
+        );
+        trackConstraints.deviceId = config.audioDeviceConfig.inputDeviceId;
+      }
       audioStream = await navigator.mediaDevices.getUserMedia({
         video: false,
-        audio: {
-          echoCancellation: true,
-        },
+        audio: trackConstraints,
       });
     } catch (error) {
       if (error instanceof DOMException && error.name === "NotAllowedError") {

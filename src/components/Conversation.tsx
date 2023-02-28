@@ -15,13 +15,13 @@ const Conversation = ({
 }) => {
   const [audioDeviceConfig, setAudioDeviceConfig] =
     React.useState<AudioDeviceConfig>({});
-  const [inputDevice, setInputDevice] = React.useState<MediaDeviceInfo>();
-  const [outputDevice, setOutputDevice] = React.useState<MediaDeviceInfo>();
-  const prevDevices = React.useRef<MediaDeviceInfo[]>([]);
+  const [inputDevices, setInputDevices] = React.useState<MediaDeviceInfo[]>([]);
+  const [outputDevices, setOutputDevices] = React.useState<MediaDeviceInfo[]>(
+    []
+  );
   const audioRef = React.useRef<HTMLAudioElement>(null);
   const { status, start, stop, analyserNode } = useConversation(
     Object.assign(config, { audioDeviceConfig }),
-    // config,
     audioRef
   );
 
@@ -29,16 +29,14 @@ const Conversation = ({
     navigator.mediaDevices
       .enumerateDevices()
       .then((devices) => {
-        setInputDevice(
-          devices.find(
-            (device) =>
-              device.deviceId === "default" && device.kind === "audioinput"
+        setInputDevices(
+          devices.filter(
+            (device) => device.deviceId && device.kind === "audioinput"
           )
         );
-        setOutputDevice(
-          devices.find(
-            (device) =>
-              device.deviceId === "default" && device.kind === "audiooutput"
+        setOutputDevices(
+          devices.filter(
+            (device) => device.deviceId && device.kind === "audiooutput"
           )
         );
       })
@@ -70,17 +68,7 @@ const Conversation = ({
         </Box>
       )}
       <VStack position="absolute" top={"42%"} left="2%" paddingBottom={5}>
-        {inputDevice && (
-          <Box>
-            <Text color="#FFFFFF">{inputDevice.label}</Text>
-          </Box>
-        )}
-        {outputDevice && (
-          <Box>
-            <Text color="#FFFFFF">{outputDevice.label}</Text>
-          </Box>
-        )}
-        {/* {inputAudioDevices.length + outputAudioDevices.length > 0 && (
+        {inputDevices.length + outputDevices.length > 0 && (
           <>
             <Select
               color={"#FFFFFF"}
@@ -93,7 +81,7 @@ const Conversation = ({
               }
               value={audioDeviceConfig.inputDeviceId}
             >
-              {inputAudioDevices.map((device, i) => {
+              {inputDevices.map((device, i) => {
                 return (
                   <option key={i} value={device.deviceId}>
                     {device.label}
@@ -103,7 +91,7 @@ const Conversation = ({
             </Select>
             <Select
               color={"#FFFFFF"}
-              disabled={["connecting", "connected"].includes(status)}
+              disabled={true}
               onChange={(event) =>
                 setAudioDeviceConfig({
                   ...audioDeviceConfig,
@@ -112,7 +100,7 @@ const Conversation = ({
               }
               value={audioDeviceConfig.outputDeviceId}
             >
-              {outputAudioDevices.map((device, i) => {
+              {outputDevices.map((device, i) => {
                 return (
                   <option key={i} value={device.deviceId}>
                     {device.label}
@@ -121,7 +109,7 @@ const Conversation = ({
               })}
             </Select>
           </>
-        )} */}
+        )}
         <Select
           color={"#FFFFFF"}
           disabled={["connecting", "connected"].includes(status)}
