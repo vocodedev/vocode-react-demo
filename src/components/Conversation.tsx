@@ -91,7 +91,7 @@ const Conversation = ({
             </Select>
             <Select
               color={"#FFFFFF"}
-              disabled={true}
+              disabled
               onChange={(event) =>
                 setAudioDeviceConfig({
                   ...audioDeviceConfig,
@@ -114,6 +114,7 @@ const Conversation = ({
           color={"#FFFFFF"}
           disabled={["connecting", "connected"].includes(status)}
           onChange={(event) =>
+            event.target.value &&
             setAudioDeviceConfig({
               ...audioDeviceConfig,
               outputSamplingRate: parseInt(event.target.value),
@@ -122,7 +123,7 @@ const Conversation = ({
           placeholder="Set output sampling rate"
           value={audioDeviceConfig.outputSamplingRate}
         >
-          {[8000, 16000, 24000, 44100, 48000].map((rate, i) => {
+          {["8000", "16000", "24000", "44100", "48000"].map((rate, i) => {
             return (
               <option key={i} value={rate}>
                 {rate} Hz

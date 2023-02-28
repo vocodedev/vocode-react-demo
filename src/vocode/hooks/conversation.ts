@@ -172,6 +172,7 @@ export const useConversation = (
       stopConversation("error");
       return;
     }
+
     const micSettings = audioStream.getAudioTracks()[0].getSettings();
     const inputAudioMetadata = {
       samplingRate: micSettings.sampleRate || audioContext.sampleRate,
