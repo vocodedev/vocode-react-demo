@@ -152,7 +152,7 @@ export const useConversation = (
       audioStream = await navigator.mediaDevices.getUserMedia({
         video: false,
         audio: {
-          echoCancellation: true,
+          echoCancellation: false,
         },
       });
     } catch (error) {
