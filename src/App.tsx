@@ -9,22 +9,19 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import DarkModeProvider from "./DarkModeProvider";
 import Conversation from "./components/Conversation";
 
 import { isIE, isMobile } from "react-device-detect";
 import { WarningIcon } from "@chakra-ui/icons";
-import { DeepgramTranscriberConfig } from "./types/vocode/transcriber";
-import { EchoAgentConfig, LLMAgentConfig } from "./types/vocode/agent";
-import { AzureSynthesizerConfig } from "./types/vocode/synthesizer";
-import { AudioDeviceConfig } from "./types/conversation";
+import {
+  DeepgramTranscriberConfig,
+  LLMAgentConfig,
+  AzureSynthesizerConfig,
+  VocodeConfig,
+} from "vocode";
 import AudioVisualization from "./components/AudioVisualization";
 
 const App = () => {
-  const audioDeviceConfig: AudioDeviceConfig = {
-    inputDeviceId: "default",
-    outputDeviceId: "default",
-  };
   const transcriberConfig: Omit<
     DeepgramTranscriberConfig,
     "samplingRate" | "audioEncoding"
@@ -46,6 +43,9 @@ const App = () => {
     type: "azure",
     shouldEncodeAsWav: true,
   };
+  const vocodeConfig: VocodeConfig = {
+    apiKey: process.env.REACT_APP_VOCODE_API_KEY || "",
+  };
 
   return (
     <ChakraProvider>
@@ -57,6 +57,7 @@ const App = () => {
               transcriberConfig,
               agentConfig,
               synthesizerConfig,
+              vocodeConfig,
             }}
           />
         ) : (
