@@ -37,7 +37,7 @@ export const useConversation = (
   React.useEffect(() => {
     const audioContext = new AudioContext();
     setAudioContext(audioContext);
-    setAudioAnalyser(audioContext.createAnalyser());
+    // setAudioAnalyser(audioContext.createAnalyser());
   }, [config.audioDeviceConfig]);
 
   // once the conversation is connected, stream the microphone audio into the socket
@@ -70,12 +70,12 @@ export const useConversation = (
   React.useEffect(() => {
     const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
       audioContext &&
-        audioAnalyser &&
+        // audioAnalyser &&
         audioContext.decodeAudioData(arrayBuffer, (buffer) => {
           const source = audioContext.createBufferSource();
           source.buffer = buffer;
           source.connect(audioContext.destination);
-          source.connect(audioAnalyser);
+          // source.connect(audioAnalyser);
           source.start(0);
           source.onended = () => {
             setProcessing(false);
