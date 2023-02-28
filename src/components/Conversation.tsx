@@ -1,4 +1,4 @@
-import { Box, Button, Select, Spinner, VStack } from "@chakra-ui/react";
+import { Box, Button, Select, Spinner, Text, VStack } from "@chakra-ui/react";
 import React from "react";
 import {
   useConversation,
@@ -14,33 +14,31 @@ const Conversation = ({
   config: Omit<ConversationConfig, "audioDeviceConfig">;
 }) => {
   const [audioDeviceConfig, setAudioDeviceConfig] =
-    React.useState<AudioDeviceConfig>({
-      inputDeviceId: "default",
-      outputDeviceId: "default",
-      outputSamplingRate: undefined,
-    });
-  const [inputAudioDevices, setInputAudioDevices] = React.useState<
-    MediaDeviceInfo[]
-  >([]);
-  const [outputAudioDevices, setOutputAudioDevices] = React.useState<
-    MediaDeviceInfo[]
-  >([]);
+    React.useState<AudioDeviceConfig>({});
+  const [inputDevice, setInputDevice] = React.useState<MediaDeviceInfo>();
+  const [outputDevice, setOutputDevice] = React.useState<MediaDeviceInfo>();
+  const prevDevices = React.useRef<MediaDeviceInfo[]>([]);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
   const { status, start, stop, analyserNode } = useConversation(
-    Object.assign(config, { audioDeviceConfig })
+    Object.assign(config, { audioDeviceConfig }),
+    // config,
+    audioRef
   );
 
   React.useEffect(() => {
     navigator.mediaDevices
       .enumerateDevices()
       .then((devices) => {
-        setInputAudioDevices(
-          devices.filter(
-            (device) => device.deviceId && device.kind === "audioinput"
+        setInputDevice(
+          devices.find(
+            (device) =>
+              device.deviceId === "default" && device.kind === "audioinput"
           )
         );
-        setOutputAudioDevices(
-          devices.filter(
-            (device) => device.deviceId && device.kind === "audiooutput"
+        setOutputDevice(
+          devices.find(
+            (device) =>
+              device.deviceId === "default" && device.kind === "audiooutput"
           )
         );
       })
@@ -51,6 +49,7 @@ const Conversation = ({
 
   return (
     <>
+      {analyserNode && <AudioVisualization analyser={analyserNode} />}
       <Button
         variant="link"
         disabled={["connecting", "error"].includes(status)}
@@ -59,9 +58,9 @@ const Conversation = ({
         top={"42%"}
         left="47.6%"
       >
-        {/* {analyserNode && <AudioVisualization analyser={analyserNode} />} */}
         <Box boxSize={75}>
           <MicrophoneIcon color={"#ddfafa"} muted={status !== "connected"} />
+          <audio ref={audioRef} />
         </Box>
       </Button>
       <Box boxSize={50} />
@@ -71,7 +70,17 @@ const Conversation = ({
         </Box>
       )}
       <VStack position="absolute" top={"42%"} left="2%" paddingBottom={5}>
-        {inputAudioDevices.length + outputAudioDevices.length > 0 && (
+        {inputDevice && (
+          <Box>
+            <Text color="#FFFFFF">{inputDevice.label}</Text>
+          </Box>
+        )}
+        {outputDevice && (
+          <Box>
+            <Text color="#FFFFFF">{outputDevice.label}</Text>
+          </Box>
+        )}
+        {/* {inputAudioDevices.length + outputAudioDevices.length > 0 && (
           <>
             <Select
               color={"#FFFFFF"}
@@ -112,7 +121,7 @@ const Conversation = ({
               })}
             </Select>
           </>
-        )}
+        )} */}
         <Select
           color={"#FFFFFF"}
           disabled={["connecting", "connected"].includes(status)}

@@ -18,7 +18,8 @@ import {
 const VOCODE_API_URL = "api.vocode.dev";
 
 export const useConversation = (
-  config: ConversationConfig
+  config: ConversationConfig,
+  audioRef: React.RefObject<HTMLAudioElement>
 ): {
   status: ConversationStatus;
   start: () => void;
@@ -27,7 +28,7 @@ export const useConversation = (
 } => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
   const [audioAnalyser, setAudioAnalyser] = React.useState<AnalyserNode>();
-  const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
+  const [audioQueue, setAudioQueue] = React.useState<string[]>([]);
   const [processing, setProcessing] = React.useState(false);
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
   const [socket, setSocket] = React.useState<WebSocket>();
@@ -35,10 +36,15 @@ export const useConversation = (
 
   // get audio context and metadata about user audio
   React.useEffect(() => {
+    if (!audioRef.current) return;
     const audioContext = new AudioContext();
     setAudioContext(audioContext);
-    // setAudioAnalyser(audioContext.createAnalyser());
-  }, [config.audioDeviceConfig]);
+    const audioAnalyser = audioContext.createAnalyser();
+    audioAnalyser.connect(audioContext.destination);
+    setAudioAnalyser(audioAnalyser);
+    const source = audioContext.createMediaElementSource(audioRef.current);
+    source.connect(audioAnalyser);
+  }, [audioRef]);
 
   // once the conversation is connected, stream the microphone audio into the socket
   React.useEffect(() => {
@@ -68,27 +74,16 @@ export const useConversation = (
 
   // when audio comes into the queue, play it to the user
   React.useEffect(() => {
-    const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
-      audioContext &&
-        // audioAnalyser &&
-        audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-          const source = audioContext.createBufferSource();
-          source.buffer = buffer;
-          source.connect(audioContext.destination);
-          // source.connect(audioAnalyser);
-          source.start(0);
-          source.onended = () => {
-            setProcessing(false);
-          };
-        });
-    };
+    if (!audioRef.current) return;
+    const audioElement = audioRef.current;
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
-      audio &&
-        fetch(URL.createObjectURL(new Blob([audio])))
-          .then((response) => response.arrayBuffer())
-          .then(playArrayBuffer);
+      audioElement.src = `data:audio/wav;base64,${audio}`;
+      audioElement.play();
+      audioElement.onended = () => {
+        setProcessing(false);
+      };
     }
   }, [audioQueue, processing]);
 
@@ -106,7 +101,6 @@ export const useConversation = (
   };
 
   const startConversation = async () => {
-    // if (!audioContext || !audioAnalyser) return;
     if (!audioContext) return;
     setStatus("connecting");
 
@@ -133,8 +127,7 @@ export const useConversation = (
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
       if (message.type === "audio") {
-        const audio = Buffer.from(message.data, "base64");
-        setAudioQueue((prev) => [...prev, audio]);
+        setAudioQueue((prev) => [...prev, message.data as string]);
       } else if (message.type === "ready") {
         setStatus("connected");
       }
@@ -161,7 +154,6 @@ export const useConversation = (
         audio: {
           echoCancellation: true,
           autoGainControl: true,
-          deviceId: config.audioDeviceConfig.inputDeviceId,
         },
       });
     } catch (error) {
@@ -181,20 +173,6 @@ export const useConversation = (
     };
     console.log("Input audio metadata", inputAudioMetadata);
 
-    if (!("setSinkId" in AudioContext.prototype)) {
-      alert("Upgrade to Chrome 110 to talk to the bot.");
-      stopConversation("error");
-      return;
-    }
-    if (config.audioDeviceConfig.outputDeviceId !== "default") {
-      console.log(
-        'Setting output device to "' +
-          config.audioDeviceConfig.outputDeviceId +
-          '"'
-      );
-      // @ts-ignore - setSinkId is not in the typescript definition
-      await audioContext.setSinkId(config.audioDeviceConfig.outputDeviceId);
-    }
     const outputAudioMetadata = {
       samplingRate:
         config.audioDeviceConfig.outputSamplingRate || audioContext.sampleRate,

@@ -6,8 +6,8 @@ import { AudioEncoding } from "./vocode/audioEncoding";
 export type ConversationStatus = "idle" | "connecting" | "connected" | "error";
 
 export type AudioDeviceConfig = {
-  inputDeviceId: "default" | string;
-  outputDeviceId: "default" | string;
+  // inputDeviceId: "default" | string;
+  // outputDeviceId: "default" | string;
   outputSamplingRate?: number;
 };
 
