@@ -54,7 +54,7 @@ const Conversation = (props: ConversationComponentProps) => {
       >
         {analyserNode && <AudioVisualization analyser={analyserNode} />}
         <Box position={"absolute"} top={"42%"} left="47.6%" boxSize={75}>
-          <MicrophoneIcon color={"#FFFFFF"} muted={status !== "connected"} />
+          <MicrophoneIcon color={"#ddfafa"} muted={status !== "connected"} />
         </Box>
       </Button>
       <Box boxSize={50} />
