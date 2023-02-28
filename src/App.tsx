@@ -18,8 +18,7 @@ import {
   LLMAgentConfig,
   AzureSynthesizerConfig,
   VocodeConfig,
-} from "vocode";
-import AudioVisualization from "./components/AudioVisualization";
+} from "./vocode";
 
 const App = () => {
   const transcriberConfig: Omit<

@@ -1,6 +1,10 @@
 import { Box, Button, Select, Spinner, VStack } from "@chakra-ui/react";
 import React from "react";
-import { useConversation, AudioDeviceConfig, ConversationConfig } from "vocode";
+import {
+  useConversation,
+  AudioDeviceConfig,
+  ConversationConfig,
+} from "../vocode";
 import MicrophoneIcon from "./MicrophoneIcon";
 import AudioVisualization from "./AudioVisualization";
 
@@ -51,9 +55,12 @@ const Conversation = ({
         variant="link"
         disabled={["connecting", "error"].includes(status)}
         onClick={status === "connected" ? stop : start}
+        position={"absolute"}
+        top={"42%"}
+        left="47.6%"
       >
-        {analyserNode && <AudioVisualization analyser={analyserNode} />}
-        <Box position={"absolute"} top={"42%"} left="47.6%" boxSize={75}>
+        {/* {analyserNode && <AudioVisualization analyser={analyserNode} />} */}
+        <Box boxSize={75}>
           <MicrophoneIcon color={"#ddfafa"} muted={status !== "connected"} />
         </Box>
       </Button>
