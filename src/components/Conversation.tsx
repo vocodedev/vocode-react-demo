@@ -1,14 +1,14 @@
 import { Box, Button, Select, Spinner, VStack } from "@chakra-ui/react";
 import React from "react";
-import {
-  AudioDeviceConfig,
-  ConversationComponentProps,
-} from "../types/conversation";
-import { useConversation } from "../hooks/conversation";
+import { useConversation, AudioDeviceConfig, ConversationConfig } from "vocode";
 import MicrophoneIcon from "./MicrophoneIcon";
 import AudioVisualization from "./AudioVisualization";
 
-const Conversation = (props: ConversationComponentProps) => {
+const Conversation = ({
+  config,
+}: {
+  config: Omit<ConversationConfig, "audioDeviceConfig">;
+}) => {
   const [audioDeviceConfig, setAudioDeviceConfig] =
     React.useState<AudioDeviceConfig>({
       inputDeviceId: "default",
@@ -22,7 +22,7 @@ const Conversation = (props: ConversationComponentProps) => {
     MediaDeviceInfo[]
   >([]);
   const { status, start, stop, analyserNode } = useConversation(
-    Object.assign(props.config, { audioDeviceConfig })
+    Object.assign(config, { audioDeviceConfig })
   );
 
   React.useEffect(() => {
