@@ -62,7 +62,13 @@ const Conversation = ({
       </Button>
       <Box boxSize={50} />
       {status === "connecting" && (
-        <Box position={"absolute"} top="55%" left="48%" padding={5}>
+        <Box
+          position={"absolute"}
+          top="57.5%"
+          left="50%"
+          transform={"translate(-50%, -50%)"}
+          padding={5}
+        >
           <Spinner color="#FFFFFF" />
         </Box>
       )}
