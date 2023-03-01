@@ -1,4 +1,4 @@
-import { Box, Button, Select, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, HStack, Select, Spinner } from "@chakra-ui/react";
 import React from "react";
 import {
   useConversation,
@@ -52,8 +52,9 @@ const Conversation = ({
         disabled={["connecting", "error"].includes(status)}
         onClick={status === "connected" ? stop : start}
         position={"absolute"}
-        top={"42%"}
-        left="47.6%"
+        top={"45%"}
+        left={"50%"}
+        transform={"translate(-50%, -50%)"}
       >
         <Box boxSize={75}>
           <MicrophoneIcon color={"#ddfafa"} muted={status !== "connected"} />
@@ -66,7 +67,7 @@ const Conversation = ({
         </Box>
       )}
       {!isMobile && (
-        <VStack position="absolute" top={"42%"} left="2%" paddingBottom={5}>
+        <HStack width="96%" position="absolute" top={"10%"} left="2%">
           {inputDevices.length > 0 && (
             <Select
               color={"#FFFFFF"}
@@ -130,7 +131,7 @@ const Conversation = ({
               );
             })}
           </Select>
-        </VStack>
+        </HStack>
       )}
     </>
   );

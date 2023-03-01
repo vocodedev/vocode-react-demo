@@ -31,8 +31,8 @@ const App = () => {
     model: "conversationalai",
     chunkSize: 2048,
   };
-  const agentConfig: ChatGPTAgentConfig = {
-    type: "chat_gpt",
+  const agentConfig: LLMAgentConfig = {
+    type: "llm",
     initialMessage: "Hello!",
     promptPreamble:
       "Vocode is an SDK that allows developers to create voice bots like this one in less than 10 lines of code. The AI is explaining to the human what Vocode is.",
@@ -50,27 +50,24 @@ const App = () => {
 
   return (
     <ChakraProvider>
-      <Flex height={"100vh"} align={"center"} direction="column">
-        <Spacer />
-        {isIE || (isMobile && !isSafari) ? (
-          <VStack position="absolute" top="35%" left="33%">
-            <WarningIcon boxSize={100} />
-            <Text paddingTop={4}>
-              This demo works on: Chrome (desktop) and Safari (desktop, mobile)
-              only!
-            </Text>
-          </VStack>
-        ) : (
-          <Conversation
-            config={{
-              transcriberConfig,
-              agentConfig,
-              synthesizerConfig,
-              vocodeConfig,
-            }}
-          />
-        )}
-      </Flex>
+      {isIE || (isMobile && !isSafari) ? (
+        <VStack padding={10} alignItems="center">
+          <WarningIcon boxSize={100} />
+          <Text paddingTop={4}>
+            This demo works on: Chrome (desktop) and Safari (desktop, mobile)
+            only!
+          </Text>
+        </VStack>
+      ) : (
+        <Conversation
+          config={{
+            transcriberConfig,
+            agentConfig,
+            synthesizerConfig,
+            vocodeConfig,
+          }}
+        />
+      )}
     </ChakraProvider>
   );
 };

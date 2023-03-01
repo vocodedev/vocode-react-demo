@@ -10,9 +10,9 @@ const AudioVisualization = ({ analyser }: { analyser: AnalyserNode }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    canvas.width = canvas.height = 1000;
-    canvas.width = 1920;
-    canvas.height = 1080;
+    // canvas.width = canvas.height = 1000;
+    // canvas.width = 1920;
+    // canvas.height = 1080;
     document.body.style.margin = "0";
     document.body.style.overflow = "hidden";
 
