@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import Conversation from "./components/Conversation";
 
-import { isIE, isMobile } from "react-device-detect";
+import { isIE, isMobile, isSafari } from "react-device-detect";
 import { WarningIcon } from "@chakra-ui/icons";
 import {
   DeepgramTranscriberConfig,
@@ -52,7 +52,15 @@ const App = () => {
     <ChakraProvider>
       <Flex height={"100vh"} align={"center"} direction="column">
         <Spacer />
-        {!isIE && !isMobile ? (
+        {isIE || (isMobile && !isSafari) ? (
+          <VStack position="absolute" top="35%" left="33%">
+            <WarningIcon boxSize={100} />
+            <Text paddingTop={4}>
+              This demo works on: Chrome (desktop) and Safari (desktop, mobile)
+              only!
+            </Text>
+          </VStack>
+        ) : (
           <Conversation
             config={{
               transcriberConfig,
@@ -61,13 +69,6 @@ const App = () => {
               vocodeConfig,
             }}
           />
-        ) : (
-          <VStack>
-            <WarningIcon boxSize={100} />
-            <Text paddingTop={4}>
-              This demo only works with Chrome on computer!
-            </Text>
-          </VStack>
         )}
       </Flex>
     </ChakraProvider>
