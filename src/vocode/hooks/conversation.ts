@@ -15,8 +15,9 @@ import {
 } from "../types/vocode/websocket";
 import { DeepgramTranscriberConfig, TranscriberConfig } from "../types";
 import { isSafari, isChrome } from "react-device-detect";
+import { Buffer } from "buffer";
 
-const VOCODE_API_URL = "api.vocode.dev";
+const VOCODE_API_URL = "57a6aae9f425.ngrok.io";
 
 export const useConversation = (
   config: ConversationConfig
@@ -28,19 +29,17 @@ export const useConversation = (
 } => {
   const [audioContext, setAudioContext] = React.useState<AudioContext>();
   const [audioAnalyser, setAudioAnalyser] = React.useState<AnalyserNode>();
-  const [audioQueue, setAudioQueue] = React.useState<string[]>([]);
+  const [audioQueue, setAudioQueue] = React.useState<Buffer[]>([]);
   const [processing, setProcessing] = React.useState(false);
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
   const [socket, setSocket] = React.useState<WebSocket>();
   const [status, setStatus] = React.useState<ConversationStatus>("idle");
-  const [audioElement, setAudioElement] = React.useState<HTMLAudioElement>();
 
   // get audio context and metadata about user audio
   React.useEffect(() => {
     const audioContext = new AudioContext();
     setAudioContext(audioContext);
     const audioAnalyser = audioContext.createAnalyser();
-    audioAnalyser.connect(audioContext.destination);
     setAudioAnalyser(audioAnalyser);
   }, []);
 
@@ -70,17 +69,29 @@ export const useConversation = (
     registerWav().catch(console.error);
   }, []);
 
-  // when audio comes into the queue, play it to the user
+  // play audio that is queued
   React.useEffect(() => {
-    if (!audioElement) return;
+    const playArrayBuffer = (arrayBuffer: ArrayBuffer) => {
+      audioContext &&
+        audioAnalyser &&
+        audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+          const source = audioContext.createBufferSource();
+          source.buffer = buffer;
+          source.connect(audioContext.destination);
+          source.connect(audioAnalyser);
+          source.start(0);
+          source.onended = () => {
+            setProcessing(false);
+          };
+        });
+    };
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
-      audioElement.src = `data:audio/wav;base64,${audio}`;
-      audioElement.play();
-      audioElement.onended = () => {
-        setProcessing(false);
-      };
+      audio &&
+        fetch(URL.createObjectURL(new Blob([audio])))
+          .then((response) => response.arrayBuffer())
+          .then(playArrayBuffer);
     }
   }, [audioQueue, processing]);
 
@@ -110,11 +121,6 @@ export const useConversation = (
       audioContext.resume();
     }
 
-    const audioElement = new Audio();
-    setAudioElement(audioElement);
-    const source = audioContext.createMediaElementSource(audioElement);
-    source.connect(audioAnalyser);
-
     const resp = await fetch(`https://${VOCODE_API_URL}/auth/token`, {
       method: "POST",
       headers: {
@@ -134,7 +140,7 @@ export const useConversation = (
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
       if (message.type === "audio") {
-        setAudioQueue((prev) => [...prev, message.data as string]);
+        setAudioQueue((prev) => [...prev, Buffer.from(message.data, "base64")]);
       } else if (message.type === "ready") {
         setStatus("connected");
       }

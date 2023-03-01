@@ -7,6 +7,7 @@ import {
 } from "../vocode";
 import MicrophoneIcon from "./MicrophoneIcon";
 import AudioVisualization from "./AudioVisualization";
+import { isMobile } from "react-device-detect";
 
 const Conversation = ({
   config,
@@ -64,71 +65,73 @@ const Conversation = ({
           <Spinner color="#FFFFFF" />
         </Box>
       )}
-      <VStack position="absolute" top={"42%"} left="2%" paddingBottom={5}>
-        {inputDevices.length > 0 && (
+      {!isMobile && (
+        <VStack position="absolute" top={"42%"} left="2%" paddingBottom={5}>
+          {inputDevices.length > 0 && (
+            <Select
+              color={"#FFFFFF"}
+              disabled={["connecting", "connected"].includes(status)}
+              onChange={(event) =>
+                setAudioDeviceConfig({
+                  ...audioDeviceConfig,
+                  inputDeviceId: event.target.value,
+                })
+              }
+              value={audioDeviceConfig.inputDeviceId}
+            >
+              {inputDevices.map((device, i) => {
+                return (
+                  <option key={i} value={device.deviceId}>
+                    {device.label}
+                  </option>
+                );
+              })}
+            </Select>
+          )}
+          {outputDevices.length > 0 && (
+            <Select
+              color={"#FFFFFF"}
+              disabled
+              onChange={(event) =>
+                setAudioDeviceConfig({
+                  ...audioDeviceConfig,
+                  outputDeviceId: event.target.value,
+                })
+              }
+              value={audioDeviceConfig.outputDeviceId}
+            >
+              {outputDevices.map((device, i) => {
+                return (
+                  <option key={i} value={device.deviceId}>
+                    {device.label}
+                  </option>
+                );
+              })}
+            </Select>
+          )}
           <Select
             color={"#FFFFFF"}
             disabled={["connecting", "connected"].includes(status)}
             onChange={(event) =>
+              event.target.value &&
               setAudioDeviceConfig({
                 ...audioDeviceConfig,
-                inputDeviceId: event.target.value,
+                outputSamplingRate: parseInt(event.target.value),
               })
             }
-            value={audioDeviceConfig.inputDeviceId}
+            placeholder="Set output sampling rate"
+            value={audioDeviceConfig.outputSamplingRate}
           >
-            {inputDevices.map((device, i) => {
+            {["8000", "16000", "24000", "44100", "48000"].map((rate, i) => {
               return (
-                <option key={i} value={device.deviceId}>
-                  {device.label}
+                <option key={i} value={rate}>
+                  {rate} Hz
                 </option>
               );
             })}
           </Select>
-        )}
-        {outputDevices.length > 0 && (
-          <Select
-            color={"#FFFFFF"}
-            disabled
-            onChange={(event) =>
-              setAudioDeviceConfig({
-                ...audioDeviceConfig,
-                outputDeviceId: event.target.value,
-              })
-            }
-            value={audioDeviceConfig.outputDeviceId}
-          >
-            {outputDevices.map((device, i) => {
-              return (
-                <option key={i} value={device.deviceId}>
-                  {device.label}
-                </option>
-              );
-            })}
-          </Select>
-        )}
-        <Select
-          color={"#FFFFFF"}
-          disabled={["connecting", "connected"].includes(status)}
-          onChange={(event) =>
-            event.target.value &&
-            setAudioDeviceConfig({
-              ...audioDeviceConfig,
-              outputSamplingRate: parseInt(event.target.value),
-            })
-          }
-          placeholder="Set output sampling rate"
-          value={audioDeviceConfig.outputSamplingRate}
-        >
-          {["8000", "16000", "24000", "44100", "48000"].map((rate, i) => {
-            return (
-              <option key={i} value={rate}>
-                {rate} Hz
-              </option>
-            );
-          })}
-        </Select>
-      </VStack>
+        </VStack>
+      )}
     </>
   );
 };
