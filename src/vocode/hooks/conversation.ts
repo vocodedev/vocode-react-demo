@@ -13,12 +13,13 @@ import {
   StartMessage,
   StopMessage,
 } from "../types/vocode/websocket";
+import { DeepgramTranscriberConfig, TranscriberConfig } from "../types";
+import { isSafari, isChrome } from "react-device-detect";
 
 const VOCODE_API_URL = "api.vocode.dev";
 
 export const useConversation = (
-  config: ConversationConfig,
-  audioRef: React.RefObject<HTMLAudioElement>
+  config: ConversationConfig
 ): {
   status: ConversationStatus;
   start: () => void;
@@ -32,18 +33,16 @@ export const useConversation = (
   const [recorder, setRecorder] = React.useState<IMediaRecorder>();
   const [socket, setSocket] = React.useState<WebSocket>();
   const [status, setStatus] = React.useState<ConversationStatus>("idle");
+  const [audioElement, setAudioElement] = React.useState<HTMLAudioElement>();
 
   // get audio context and metadata about user audio
   React.useEffect(() => {
-    if (!audioRef.current) return;
     const audioContext = new AudioContext();
     setAudioContext(audioContext);
     const audioAnalyser = audioContext.createAnalyser();
     audioAnalyser.connect(audioContext.destination);
     setAudioAnalyser(audioAnalyser);
-    const source = audioContext.createMediaElementSource(audioRef.current);
-    source.connect(audioAnalyser);
-  }, [audioRef]);
+  }, []);
 
   // once the conversation is connected, stream the microphone audio into the socket
   React.useEffect(() => {
@@ -73,8 +72,7 @@ export const useConversation = (
 
   // when audio comes into the queue, play it to the user
   React.useEffect(() => {
-    if (!audioRef.current) return;
-    const audioElement = audioRef.current;
+    if (!audioElement) return;
     if (!processing && audioQueue.length > 0) {
       setProcessing(true);
       const audio = audioQueue.shift();
@@ -100,12 +98,22 @@ export const useConversation = (
   };
 
   const startConversation = async () => {
-    if (!audioContext) return;
+    if (!audioContext || !audioAnalyser) return;
     setStatus("connecting");
+
+    if (!isSafari && !isChrome) {
+      stopConversation("error");
+      return;
+    }
 
     if (audioContext.state === "suspended") {
       audioContext.resume();
     }
+
+    const audioElement = new Audio();
+    setAudioElement(audioElement);
+    const source = audioContext.createMediaElementSource(audioElement);
+    source.connect(audioAnalyser);
 
     const resp = await fetch(`https://${VOCODE_API_URL}/auth/token`, {
       method: "POST",
@@ -172,8 +180,8 @@ export const useConversation = (
       stopConversation("error");
       return;
     }
-
     const micSettings = audioStream.getAudioTracks()[0].getSettings();
+    console.log(micSettings);
     const inputAudioMetadata = {
       samplingRate: micSettings.sampleRate || audioContext.sampleRate,
       audioEncoding: "linear16" as AudioEncoding,
@@ -186,6 +194,14 @@ export const useConversation = (
       audioEncoding: "linear16" as AudioEncoding,
     };
     console.log("Output audio metadata", inputAudioMetadata);
+
+    let transcriberConfig: TranscriberConfig = Object.assign(
+      config.transcriberConfig,
+      inputAudioMetadata
+    );
+    if (isSafari && transcriberConfig.type === "deepgram") {
+      (transcriberConfig as DeepgramTranscriberConfig).downsampling = 2;
+    }
 
     const startMessage: StartMessage = {
       type: "start",

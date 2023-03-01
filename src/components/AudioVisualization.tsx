@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import React from "react";
+import { isSafari } from "react-device-detect";
 
 const AudioVisualization = ({ analyser }: { analyser: AnalyserNode }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -33,12 +34,14 @@ const AudioVisualization = ({ analyser }: { analyser: AnalyserNode }) => {
       ctx.fillStyle = grd;
       ctx.fillRect(-max, -max, max * 2, max * 2);
       ctx.rotate(-Math.PI / 4);
-      ctx.fillStyle = "#99F";
-      ctx.beginPath();
-      ctx.arc(-50, -50, 170, 0, Math.PI * 2);
-      ctx.filter = "blur(100px)";
-      ctx.globalAlpha = 0.4;
-      ctx.fill();
+      if (!isSafari) {
+        ctx.fillStyle = "#99F";
+        ctx.beginPath();
+        ctx.arc(-50, -50, 170, 0, Math.PI * 2);
+        ctx.filter = "blur(100px)";
+        ctx.globalAlpha = 0.4;
+        ctx.fill();
+      }
       ctx.filter = "none";
       ctx.scale(1.3, 1.3);
       ctx.globalAlpha = 1;

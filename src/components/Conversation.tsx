@@ -19,10 +19,8 @@ const Conversation = ({
   const [outputDevices, setOutputDevices] = React.useState<MediaDeviceInfo[]>(
     []
   );
-  const audioRef = React.useRef<HTMLAudioElement>(null);
   const { status, start, stop, analyserNode } = useConversation(
-    Object.assign(config, { audioDeviceConfig }),
-    audioRef
+    Object.assign(config, { audioDeviceConfig })
   );
 
   React.useEffect(() => {
@@ -58,7 +56,6 @@ const Conversation = ({
       >
         <Box boxSize={75}>
           <MicrophoneIcon color={"#ddfafa"} muted={status !== "connected"} />
-          <audio ref={audioRef} />
         </Box>
       </Button>
       <Box boxSize={50} />
@@ -68,47 +65,47 @@ const Conversation = ({
         </Box>
       )}
       <VStack position="absolute" top={"42%"} left="2%" paddingBottom={5}>
-        {inputDevices.length + outputDevices.length > 0 && (
-          <>
-            <Select
-              color={"#FFFFFF"}
-              disabled={["connecting", "connected"].includes(status)}
-              onChange={(event) =>
-                setAudioDeviceConfig({
-                  ...audioDeviceConfig,
-                  inputDeviceId: event.target.value,
-                })
-              }
-              value={audioDeviceConfig.inputDeviceId}
-            >
-              {inputDevices.map((device, i) => {
-                return (
-                  <option key={i} value={device.deviceId}>
-                    {device.label}
-                  </option>
-                );
-              })}
-            </Select>
-            <Select
-              color={"#FFFFFF"}
-              disabled
-              onChange={(event) =>
-                setAudioDeviceConfig({
-                  ...audioDeviceConfig,
-                  outputDeviceId: event.target.value,
-                })
-              }
-              value={audioDeviceConfig.outputDeviceId}
-            >
-              {outputDevices.map((device, i) => {
-                return (
-                  <option key={i} value={device.deviceId}>
-                    {device.label}
-                  </option>
-                );
-              })}
-            </Select>
-          </>
+        {inputDevices.length > 0 && (
+          <Select
+            color={"#FFFFFF"}
+            disabled={["connecting", "connected"].includes(status)}
+            onChange={(event) =>
+              setAudioDeviceConfig({
+                ...audioDeviceConfig,
+                inputDeviceId: event.target.value,
+              })
+            }
+            value={audioDeviceConfig.inputDeviceId}
+          >
+            {inputDevices.map((device, i) => {
+              return (
+                <option key={i} value={device.deviceId}>
+                  {device.label}
+                </option>
+              );
+            })}
+          </Select>
+        )}
+        {outputDevices.length > 0 && (
+          <Select
+            color={"#FFFFFF"}
+            disabled
+            onChange={(event) =>
+              setAudioDeviceConfig({
+                ...audioDeviceConfig,
+                outputDeviceId: event.target.value,
+              })
+            }
+            value={audioDeviceConfig.outputDeviceId}
+          >
+            {outputDevices.map((device, i) => {
+              return (
+                <option key={i} value={device.deviceId}>
+                  {device.label}
+                </option>
+              );
+            })}
+          </Select>
         )}
         <Select
           color={"#FFFFFF"}
