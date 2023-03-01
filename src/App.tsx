@@ -20,7 +20,7 @@ import {
   VocodeConfig,
   EchoAgentConfig,
   ChatGPTAgentConfig,
-} from "./vocode";
+} from "vocode";
 
 const App = () => {
   const transcriberConfig: Omit<

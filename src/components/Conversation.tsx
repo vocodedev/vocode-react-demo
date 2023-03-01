@@ -1,10 +1,6 @@
 import { Box, Button, HStack, Select, Spinner } from "@chakra-ui/react";
 import React from "react";
-import {
-  useConversation,
-  AudioDeviceConfig,
-  ConversationConfig,
-} from "../vocode";
+import { useConversation, AudioDeviceConfig, ConversationConfig } from "vocode";
 import MicrophoneIcon from "./MicrophoneIcon";
 import AudioVisualization from "./AudioVisualization";
 import { isMobile } from "react-device-detect";
