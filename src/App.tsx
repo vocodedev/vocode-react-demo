@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import Conversation from "./components/Conversation";
 
-import { isIE, isMobile, isSafari } from "react-device-detect";
+import { isChrome, isMobile, isSafari } from "react-device-detect";
 import { WarningIcon } from "@chakra-ui/icons";
 import {
   DeepgramTranscriberConfig,
@@ -52,7 +52,7 @@ const App = () => {
 
   return (
     <ChakraProvider>
-      {isIE || (isMobile && !isSafari) ? (
+      {(isMobile || !isChrome) && !isSafari ? (
         <VStack padding={10} alignItems="center">
           <WarningIcon boxSize={100} />
           <Text paddingTop={4}>
