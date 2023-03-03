@@ -20,6 +20,8 @@ import {
   VocodeConfig,
   EchoAgentConfig,
   ChatGPTAgentConfig,
+  RESTfulUserImplementedAgentConfig,
+  WebSocketUserImplementedAgentConfig,
 } from "vocode";
 
 const App = () => {
