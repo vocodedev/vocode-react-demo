@@ -29,12 +29,11 @@ const App = () => {
     DeepgramTranscriberConfig,
     "samplingRate" | "audioEncoding"
   > = {
-    type: "deepgram",
-    model: "conversationalai",
+    type: "transcriber_deepgram",
     chunkSize: 2048,
   };
   const agentConfig: LLMAgentConfig = {
-    type: "llm",
+    type: "agent_llm",
     initialMessage: "Hello!",
     promptPreamble:
       "Vocode is an SDK that allows developers to create voice bots like this one in less than 10 lines of code. The AI is explaining to the human what Vocode is.",
@@ -43,7 +42,7 @@ const App = () => {
     AzureSynthesizerConfig,
     "samplingRate" | "audioEncoding"
   > = {
-    type: "azure",
+    type: "synthesizer_azure",
     shouldEncodeAsWav: true,
   };
   const vocodeConfig: VocodeConfig = {
