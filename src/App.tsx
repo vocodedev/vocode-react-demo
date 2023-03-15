@@ -35,11 +35,14 @@ const App = () => {
       type: "endpointing_punctuation_based",
     },
   };
-  const agentConfig: LLMAgentConfig = {
-    type: "agent_llm",
+  const agentConfig: ChatGPTAgentConfig = {
+    type: "agent_chat_gpt",
     initialMessage: { type: "message_base", text: "Hello!" },
     promptPreamble:
       "Vocode is an SDK that allows developers to create voice bots like this one in less than 10 lines of code. The AI is explaining to the human what Vocode is.",
+    endConversationOnGoodbye: true,
+    generateResponses: true,
+    cutOffResponse: {},
   };
   const synthesizerConfig: Omit<
     AzureSynthesizerConfig,
