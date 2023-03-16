@@ -50,7 +50,6 @@ const App = () => {
   > = {
     type: "synthesizer_azure",
     shouldEncodeAsWav: true,
-    // @ts-ignore
     voiceName: "en-US-SteffanNeural",
   };
   const vocodeConfig: VocodeConfig = {
