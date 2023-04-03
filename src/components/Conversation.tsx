@@ -19,6 +19,10 @@ const Conversation = ({
   const { status, start, stop, analyserNode } = useConversation(
     Object.assign(config, { audioDeviceConfig })
   );
+  // const { status, start, stop, analyserNode } = useConversation({
+  //   backendUrl: "wss://56686e955e8c.ngrok.app/conversation",
+  //   audioDeviceConfig,
+  // });
 
   React.useEffect(() => {
     navigator.mediaDevices
