@@ -1,4 +1,4 @@
-import { Box, Button, HStack, Select, Spinner } from "@chakra-ui/react";
+import { Box, Button, HStack, VStack, Select, Spinner } from "@chakra-ui/react";
 import React from "react";
 import { useConversation, AudioDeviceConfig, ConversationConfig } from "vocode";
 import MicrophoneIcon from "./MicrophoneIcon";
@@ -16,13 +16,14 @@ const Conversation = ({
   const [outputDevices, setOutputDevices] = React.useState<MediaDeviceInfo[]>(
     []
   );
-  const { status, start, stop, analyserNode } = useConversation(
-    Object.assign(config, { audioDeviceConfig })
-  );
-  // const { status, start, stop, analyserNode } = useConversation({
-  //   backendUrl: "wss://56686e955e8c.ngrok.app/conversation",
-  //   audioDeviceConfig,
-  // });
+  // const { status, start, stop, analyserNode } = useConversation(
+  //   Object.assign(config, { audioDeviceConfig })
+  // );
+  const { status, start, stop, analyserNode, transcripts } = useConversation({
+    backendUrl: "ws://127.0.0.1:8000/conversation",
+    subscribeTranscript: true,
+    audioDeviceConfig,
+  });
 
   React.useEffect(() => {
     navigator.mediaDevices
@@ -138,6 +139,15 @@ const Conversation = ({
             })}
           </Select>
         </HStack>
+      )}
+      { transcripts.length > 0 && (
+        <VStack width="35%" position="absolute" top={"50%"} left="2%" alignItems="left">
+          {
+            transcripts.map((item, index) => {
+              return <Box key={"t" + index.toString()} color="white">{item.sender}: {item.text}</Box>
+            })
+          }
+        </VStack>
       )}
     </>
   );
