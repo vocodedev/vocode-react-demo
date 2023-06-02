@@ -141,7 +141,7 @@ const Conversation = ({
         </HStack>
       )}
       { transcripts.length > 0 && (
-        <VStack width="35%" position="absolute" top={"50%"} left="2%" alignItems="left">
+        <VStack width="35%" position="absolute" top={"50%"} height={"45%"} left="2%" alignItems="left" overflowY="auto">
           {
             transcripts.map((item, index) => {
               return <Box key={"t" + index.toString()} color="white">{item.sender}: {item.text}</Box>
