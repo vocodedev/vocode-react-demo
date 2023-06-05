@@ -16,14 +16,15 @@ const Conversation = ({
   const [outputDevices, setOutputDevices] = React.useState<MediaDeviceInfo[]>(
     []
   );
-  // const { status, start, stop, analyserNode } = useConversation(
-  //   Object.assign(config, { audioDeviceConfig })
-  // );
-  const { status, start, stop, analyserNode, transcripts } = useConversation({
-    backendUrl: "ws://127.0.0.1:8000/conversation",
-    subscribeTranscript: true,
-    audioDeviceConfig,
-  });
+  let transcripts: any[] = [];
+  const { status, start, stop, analyserNode } = useConversation(
+    Object.assign(config, { audioDeviceConfig })
+  );
+  // const { status, start, stop, analyserNode, transcripts } = useConversation({
+  //   backendUrl: "wss://56686e955e8c.ngrok.app/conversation",
+  //   subscribeTranscript: false,
+  //   audioDeviceConfig,
+  // });
 
   React.useEffect(() => {
     navigator.mediaDevices
