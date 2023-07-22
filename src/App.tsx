@@ -54,6 +54,7 @@ const App = () => {
   };
   const vocodeConfig: VocodeConfig = {
     apiKey: process.env.REACT_APP_VOCODE_API_KEY || "",
+    baseUrl: process.env.REACT_APP_BACKEND_URL || "",
   };
 
   return (
